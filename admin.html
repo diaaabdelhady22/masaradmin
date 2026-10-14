@@ -1,0 +1,1962 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>masar | لوحة تحكم المنشئ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Poppins:wght@500;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            dark: '#0F172A',
+                            primary: '#4F46E5',
+                            accent: '#06B6D4',
+                            bg: '#F8FAFC'
+                        }
+                    },
+                    fontFamily: { sans: ['Cairo', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+        <style>
+            html { scroll-behavior: smooth; }
+            [data-admin-view] { animation: admin-view-in 0.24s ease-out; }
+            @keyframes admin-view-in {
+                from { opacity: 0; transform: translateY(6px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            .admin-nav-button[aria-current="page"] {
+                color: #4f46e5;
+                background: #eef2ff;
+                box-shadow: inset 0 -2px 0 #4f46e5;
+            }
+            .dark .admin-nav-button[aria-current="page"] {
+                color: #a5b4fc;
+                background: #312e81;
+            }
+            #receipt-view-modal img {
+                transition: transform 0.25s ease;
+                max-width: 100%;
+                max-height: 80vh;
+            }
+            #receipt-view-modal img.zoomed {
+                transform: scale(1.8);
+            }
+        </style>
+    </head>
+<body class="bg-brand-bg dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-sans min-h-screen">
+
+    <!-- Header / Navbar -->
+    <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <a href="../index.html" class="flex flex-col items-start leading-none" aria-label="مسار، الصفحة الرئيسية">
+                    <span class="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white" style="font-family: Poppins, sans-serif">masar<span class="text-brand-primary">.</span></span>
+                    <span class="mt-1 text-xs font-bold tracking-widest text-slate-500 dark:text-slate-400">مسار</span>
+                </a>
+                <span class="hidden sm:block h-9 w-px bg-slate-200 dark:bg-slate-700"></span>
+                <div>
+                    <h1 class="text-sm sm:text-base font-black text-slate-800 dark:text-white">لوحة الإدارة</h1>
+                    <p class="hidden sm:block text-xs text-slate-400">إدارة منصة مسار</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 sm:gap-3">
+                <button onclick="toggleDarkMode()" class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-200 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-600 transition">
+                    <i class="fa-solid fa-moon"></i>
+                </button>
+                <a href="../index.html" class="bg-slate-200 dark:bg-slate-700 text-xs font-bold px-3 sm:px-4 py-2.5 rounded-xl hover:bg-slate-300 dark:hover:bg-slate-600 transition">
+                    العودة للموقع
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Dashboard Body -->
+    <main class="max-w-7xl mx-auto px-4 py-10 space-y-8">
+        <div class="flex flex-wrap justify-end gap-3">
+            <button type="button" onclick="window.toggleSupportDrawer()" class="rounded-2xl bg-brand-primary px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-brand-primary/20">
+                <i class="fa-solid fa-headset ml-2"></i> رسائل الدعم الفني
+            </button>
+            <button id="reset-platform-data-btn" type="button" onclick="window.resetPlatformData()" class="rounded-2xl bg-rose-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-rose-600/20">
+                <i class="fa-solid fa-trash-can ml-2"></i> حذف كل البيانات من السيرفر
+            </button>
+        </div>
+
+        <div id="support-drawer" class="hidden fixed left-0 right-0 top-0 z-[80] flex justify-center p-3 md:p-6">
+            <div class="w-full max-w-3xl rounded-[28px] border border-slate-200 bg-white shadow-2xl">
+                <div class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-4">
+                    <div>
+                        <p class="text-lg font-black text-slate-800">رسائل الدعم الفني</p>
+                        <p class="text-xs text-slate-500">اختر رسالة للرد عليها مباشرة</p>
+                    </div>
+                    <button type="button" onclick="window.toggleSupportDrawer()" class="flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-slate-600">×</button>
+                </div>
+                <div id="support-messages-list" class="max-h-[70vh] overflow-y-auto p-4 space-y-3"></div>
+            </div>
+        </div>
+
+        <nav aria-label="أقسام لوحة الإدارة" class="sticky top-20 z-30 -mx-4 overflow-x-auto border-y border-slate-200 bg-white/95 px-4 backdrop-blur dark:border-slate-700 dark:bg-slate-800/95 sm:mx-0 sm:rounded-xl sm:border sm:px-2">
+            <div class="flex min-w-max items-center gap-1">
+                <button type="button" class="admin-nav-button px-4 py-3 text-sm font-bold text-slate-500 transition" aria-current="page" onclick="window.showAdminSection('overview', this)"><i class="fa-solid fa-chart-pie ml-2"></i>نظرة عامة</button>
+                <button type="button" class="admin-nav-button px-4 py-3 text-sm font-bold text-slate-500 transition" onclick="window.showAdminSection('finance', this)"><i class="fa-solid fa-wallet ml-2"></i>الاشتراكات والإيرادات</button>
+                <button type="button" class="admin-nav-button px-4 py-3 text-sm font-bold text-slate-500 transition" onclick="window.showAdminSection('teachers', this)"><i class="fa-solid fa-chalkboard-user ml-2"></i>المدرسون</button>
+                <button type="button" class="admin-nav-button px-4 py-3 text-sm font-bold text-slate-500 transition" onclick="window.showAdminSection('students', this)"><i class="fa-solid fa-users ml-2"></i>الطلاب والكورسات</button>
+                <button type="button" class="admin-nav-button px-4 py-3 text-sm font-bold text-slate-500 transition" onclick="window.showAdminSection('marketing', this)"><i class="fa-solid fa-ticket ml-2"></i>التسويق</button>
+                <button type="button" class="admin-nav-button px-4 py-3 text-sm font-bold text-slate-500 transition" onclick="window.showAdminSection('pricing', this)"><i class="fa-solid fa-tags ml-2"></i>الأسعار</button>
+            </div>
+        </nav>
+
+        <section data-admin-view="overview" class="space-y-6">
+            <div class="flex flex-wrap items-end justify-between gap-3">
+                <div>
+                    <p class="text-xs font-bold text-brand-primary">مسار / الإدارة</p>
+                    <h2 class="mt-1 text-2xl font-black text-slate-900 dark:text-white">نظرة عامة</h2>
+                </div>
+                <p id="dashboard-updated-at" class="text-xs text-slate-400">تُحدّث البيانات عند فتح اللوحة</p>
+            </div>
+            <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <article class="rounded-2xl border border-emerald-200 bg-white p-5 dark:border-emerald-500/30 dark:bg-slate-800">
+                    <div class="flex items-center justify-between"><span class="text-sm font-bold text-slate-500 dark:text-slate-300">إجمالي الإيرادات</span><span class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10"><i class="fa-solid fa-sack-dollar"></i></span></div>
+                    <p id="dashboard-total-revenue" class="mt-4 text-2xl font-black text-slate-900 dark:text-white">—</p>
+                    <p class="mt-1 text-xs text-slate-400">من الاشتراكات المقبولة</p>
+                </article>
+                <article class="rounded-2xl border border-cyan-200 bg-white p-5 dark:border-cyan-500/30 dark:bg-slate-800">
+                    <div class="flex items-center justify-between"><span class="text-sm font-bold text-slate-500 dark:text-slate-300">إيرادات الشهر</span><span class="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-50 text-cyan-600 dark:bg-cyan-500/10"><i class="fa-solid fa-calendar-check"></i></span></div>
+                    <p id="dashboard-month-revenue" class="mt-4 text-2xl font-black text-slate-900 dark:text-white">—</p>
+                    <p class="mt-1 text-xs text-slate-400">الشهر الحالي</p>
+                </article>
+                <article class="rounded-2xl border border-indigo-200 bg-white p-5 dark:border-indigo-500/30 dark:bg-slate-800">
+                    <div class="flex items-center justify-between"><span class="text-sm font-bold text-slate-500 dark:text-slate-300">الاشتراكات المقبولة</span><span class="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10"><i class="fa-solid fa-receipt"></i></span></div>
+                    <p id="dashboard-approved-count" class="mt-4 text-2xl font-black text-slate-900 dark:text-white">—</p>
+                    <p class="mt-1 text-xs text-slate-400">كورس أو حصة</p>
+                </article>
+                <article class="rounded-2xl border border-amber-200 bg-white p-5 dark:border-amber-500/30 dark:bg-slate-800">
+                    <div class="flex items-center justify-between"><span class="text-sm font-bold text-slate-500 dark:text-slate-300">المدرسون النشطون</span><span class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-500/10"><i class="fa-solid fa-person-chalkboard"></i></span></div>
+                    <p id="dashboard-teacher-count" class="mt-4 text-2xl font-black text-slate-900 dark:text-white">—</p>
+                    <p id="dashboard-student-count" class="mt-1 text-xs text-slate-400">جاري تحميل عدد الطلاب...</p>
+                </article>
+            </div>
+            <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-4 dark:border-slate-700">
+                    <div><h3 class="font-black text-slate-900 dark:text-white">إيرادات كل مدرس</h3><p class="mt-1 text-xs text-slate-400">مرتبة حسب قيمة الاشتراكات المقبولة</p></div>
+                    <button type="button" onclick="window.showAdminSection('finance')" class="text-xs font-bold text-brand-primary hover:underline">عرض طلبات الاشتراك <i class="fa-solid fa-arrow-left mr-1"></i></button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full min-w-[520px] text-right text-sm">
+                        <thead class="bg-slate-50 text-xs text-slate-500 dark:bg-slate-700/60 dark:text-slate-300"><tr><th class="p-4">المدرس</th><th class="p-4">عدد الاشتراكات</th><th class="p-4">الإيرادات</th><th class="p-4">النسبة من الإجمالي</th></tr></thead>
+                        <tbody id="teacher-revenue-list"><tr><td colspan="4" class="p-5 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin ml-2"></i>جاري تحميل الإيرادات...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section data-admin-view="finance" class="hidden space-y-6">
+            <div><p class="text-xs font-bold text-brand-primary">إدارة المعاملات</p><h2 class="mt-1 text-2xl font-black text-slate-900 dark:text-white">الاشتراكات والإيرادات</h2></div>
+        <div class="grid xl:grid-cols-2 gap-6">
+            <section class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-emerald-200 dark:border-emerald-500/30 shadow-sm">
+                <div class="flex items-center justify-between gap-3 mb-4"><h2 class="text-xl font-bold text-emerald-600 flex items-center gap-2"><i class="fa-solid fa-wallet"></i> طلبات شحن المحفظة</h2><span class="text-xs text-slate-400">مراجعة التحويلات</span></div>
+                <div id="wallet-topups-list" class="space-y-3"><p class="text-sm text-slate-400 text-center py-6">جاري تحميل الطلبات...</p></div>
+            </section>
+            <section class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-indigo-200 dark:border-indigo-500/30 shadow-sm">
+                <div class="flex items-center justify-between gap-3 mb-4"><h2 class="text-xl font-bold text-indigo-600 flex items-center gap-2"><i class="fa-solid fa-cart-shopping"></i> مشتريات المحفظة</h2><span class="text-xs text-slate-400">فتح الكورسات بعد المراجعة</span></div>
+                <div id="wallet-purchases-list" class="space-y-3"><p class="text-sm text-slate-400 text-center py-6">جاري تحميل الطلبات...</p></div>
+            </section>
+        </div>
+        </section>
+        
+        <!-- Pending Teacher Approvals -->
+        <section data-admin-view="teachers" class="hidden space-y-6">
+            <div><p class="text-xs font-bold text-brand-primary">إدارة الحسابات</p><h2 class="mt-1 text-2xl font-black text-slate-900 dark:text-white">المدرسون</h2></div>
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+            <h2 class="text-xl font-bold text-amber-500 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-user-clock"></i> طلبات انضمام المعلمين الجديدة
+            </h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-right text-sm">
+                    <thead class="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-200">
+                        <tr>
+                            <th class="p-3">الاسم</th>
+                            <th class="p-3">التخصص</th>
+                            <th class="p-3">البريد الإلكتروني</th>
+                            <th class="p-3">رقم الهاتف</th>
+                            <th class="p-3">كلمة المرور</th>
+                            <th class="p-3">الخطة</th>
+                            <th class="p-3">المبلغ المحول</th>
+                            <th class="p-3">الإيصال</th>
+                            <th class="p-3 text-center">الإجراء</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pending-teachers-list">
+                        <tr><td colspan="9" class="p-4 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin ml-2"></i>جاري تحميل البيانات...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Approved Teachers Management -->
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+            <button type="button" onclick="window.toggleApprovedTeachers()" class="w-full flex items-center justify-between text-right">
+                <h2 class="text-xl font-bold text-emerald-500 flex items-center gap-2">
+                    <i class="fa-solid fa-user-check"></i> المعلمون المقبولون
+                </h2>
+                <i id="approved-teachers-chevron" class="fa-solid fa-chevron-down text-slate-400 transition-transform"></i>
+            </button>
+            <div id="approved-teachers-panel" class="hidden mt-4">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right text-sm">
+                        <thead class="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-200">
+                            <tr>
+                                <th class="p-3">الاسم</th>
+                                <th class="p-3">التخصص</th>
+                                <th class="p-3">البريد الإلكتروني</th>
+                                <th class="p-3">رقم الهاتف</th>
+                                <th class="p-3">كلمة المرور</th>
+                                <th class="p-3">الخطة</th>
+                                <th class="p-3">المبلغ</th>
+                                <th class="p-3">الإيصال</th>
+                                <th class="p-3 text-center">الإجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody id="approved-teachers-list">
+                            <tr><td colspan="9" class="p-4 text-center text-slate-400">اضغط لعرض المعلمين...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        </section>
+
+        <!-- Students Management -->
+        <section data-admin-view="students" class="hidden space-y-6">
+            <div><p class="text-xs font-bold text-brand-primary">إدارة المنصة</p><h2 class="mt-1 text-2xl font-black text-slate-900 dark:text-white">الطلاب والكورسات</h2></div>
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+            <button type="button" onclick="window.toggleStudentsPanel()" class="w-full flex items-center justify-between text-right">
+                <h2 class="text-xl font-bold text-sky-500 flex items-center gap-2">
+                    <i class="fa-solid fa-user-graduate"></i> الطلاب الموجودون
+                </h2>
+                <i id="students-chevron" class="fa-solid fa-chevron-down text-slate-400 transition-transform"></i>
+            </button>
+            <div id="students-panel" class="hidden mt-4">
+                <div class="mb-4 relative">
+                    <i class="fa-solid fa-magnifying-glass absolute top-1/2 -translate-y-1/2 right-4 text-slate-400 text-sm"></i>
+                    <input id="students-search-input" type="text" oninput="window.filterStudentsList()" placeholder="ابحث بالاسم أو رقم القيد أو البريد الإلكتروني (الحساب)..." class="w-full pr-10 pl-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm">
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right text-sm">
+                        <thead class="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-200">
+                            <tr>
+                                <th class="p-3">الاسم</th>
+                                <th class="p-3">البريد الإلكتروني (الحساب)</th>
+                                <th class="p-3">رقم الهاتف</th>
+                                <th class="p-3">الصف الدراسي</th>
+                                <th class="p-3">رقم القيد</th>
+                                <th class="p-3">كلمة المرور</th>
+                                <th class="p-3 text-center">الإجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody id="students-list">
+                            <tr><td colspan="7" class="p-4 text-center text-slate-400">اضغط لعرض الطلاب...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        </section>
+        <!-- Pricing Management -->
+        <section data-admin-view="pricing" class="hidden space-y-6">
+            <div><p class="text-xs font-bold text-brand-primary">أدوات النمو</p><h2 class="mt-1 text-2xl font-black text-slate-900 dark:text-white">التحكم في الأسعار</h2></div>
+
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                <h2 class="text-xl font-bold text-indigo-500 mb-1 flex items-center gap-2"><i class="fa-solid fa-tags"></i> أسعار باقات المدرسين</h2>
+                <p class="text-xs text-slate-400 mb-5">الأسعار دي هي اللي بتظهر للمدرس وقت الاشتراك والتجديد. التعديل بيتطبق فوراً بعد الحفظ.</p>
+                <div class="grid gap-4 md:grid-cols-2">
+                    <div class="rounded-2xl border border-slate-200 dark:border-slate-700 p-4 space-y-3">
+                        <p class="font-black text-slate-800 dark:text-white">الخطة الأساسية <span class="text-xs font-bold text-slate-400">(حصتين يومياً)</span></p>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div><label class="block text-xs font-bold mb-1">السعر الشهري (ج.م)</label><input id="price-plan1-monthly" type="number" min="0" step="1" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl"></div>
+                            <div><label class="block text-xs font-bold mb-1">السعر السنوي (ج.م)</label><input id="price-plan1-yearly" type="number" min="0" step="1" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl"></div>
+                        </div>
+                    </div>
+                    <div class="rounded-2xl border border-brand-primary/40 p-4 space-y-3">
+                        <p class="font-black text-slate-800 dark:text-white">الخطة الاحترافية <span class="text-xs font-bold text-slate-400">(حتى 5 حصص يومياً)</span></p>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div><label class="block text-xs font-bold mb-1">السعر الشهري (ج.م)</label><input id="price-plan2-monthly" type="number" min="0" step="1" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl"></div>
+                            <div><label class="block text-xs font-bold mb-1">السعر السنوي (ج.م)</label><input id="price-plan2-yearly" type="number" min="0" step="1" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-5 flex flex-wrap items-center gap-3">
+                    <button type="button" onclick="window.saveTeacherPricing()" class="bg-brand-primary hover:bg-indigo-700 text-white font-bold px-6 py-3 rounded-xl transition"><i class="fa-solid fa-floppy-disk ml-2"></i>حفظ الأسعار</button>
+                    <button type="button" onclick="window.resetTeacherPricing()" class="bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold px-4 py-3 rounded-xl transition">الرجوع للأسعار الأصلية (300 / 1500 / 500 / 2100)</button>
+                    <span id="pricing-save-status" class="text-xs font-bold text-slate-400"></span>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                <button type="button" onclick="window.toggleTeacherDiscountsPanel()" class="w-full flex items-center justify-between gap-3 rounded-2xl bg-gradient-to-l from-violet-600 to-indigo-600 px-6 py-5 text-right text-white shadow-lg transition hover:opacity-95">
+                    <span class="flex items-center gap-3 text-lg font-black"><i class="fa-solid fa-chalkboard-user"></i> خصومات المدرسين عند التجديد</span>
+                    <i id="teacher-discounts-chevron" class="fa-solid fa-chevron-down transition-transform"></i>
+                </button>
+                <div id="teacher-discounts-panel" class="hidden mt-5">
+                    <p class="text-xs text-slate-400 mb-4">سيب المدرس على «الأسعار العادية» أو فعّل له خصم تلقائي بنسبة معينة يتطبق في كل مرة يجدد فيها اشتراكه.</p>
+                    <input id="teacher-discounts-search" type="search" placeholder="ابحث باسم المدرس أو بريده..." oninput="window.filterTeacherDiscounts()" class="mb-4 w-full px-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right text-sm">
+                            <thead class="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-200">
+                                <tr><th class="p-3">المدرس</th><th class="p-3">الخطة الحالية</th><th class="p-3">نوع السعر</th><th class="p-3">نسبة الخصم %</th><th class="p-3 text-center">الإجراء</th></tr>
+                            </thead>
+                            <tbody id="teacher-discounts-list"><tr><td colspan="5" class="p-4 text-center text-slate-400">اضغط على الزرار لعرض المدرسين...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section data-admin-view="marketing" class="hidden space-y-6">
+            <div><p class="text-xs font-bold text-brand-primary">أدوات النمو</p><h2 class="mt-1 text-2xl font-black text-slate-900 dark:text-white">التسويق</h2></div>
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+            <h2 class="text-xl font-bold text-violet-500 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-ticket"></i> إدارة أكواد الخصم
+            </h2>
+            <form id="coupon-form" class="grid gap-4 md:grid-cols-3 mb-6">
+                <div>
+                    <label class="block text-xs font-bold mb-1">كود الخصم</label>
+                    <input id="coupon-code" type="text" placeholder="مثال: MASAR10" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold mb-1">نسبة الخصم %</label>
+                    <input id="coupon-percent" type="number" min="1" max="100" value="10" required class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm">
+                </div>
+                <div class="flex items-end">
+                    <button type="submit" class="w-full bg-violet-600 text-white font-bold px-4 py-3 rounded-xl hover:bg-violet-700 transition">
+                        إضافة كود الخصم
+                    </button>
+                </div>
+            </form>
+
+            <div class="overflow-x-auto mb-6">
+                <table class="w-full text-right text-sm">
+                    <thead class="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-200">
+                        <tr>
+                            <th class="p-3">الكود</th>
+                            <th class="p-3">النسبة</th>
+                            <th class="p-3 text-center">الإجراء</th>
+                        </tr>
+                    </thead>
+                    <tbody id="coupon-list">
+                        <tr><td colspan="3" class="p-4 text-center text-slate-400">لا توجد أكواد خصم مضافة بعد.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="border-t border-slate-200 dark:border-slate-700 pt-5">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-lg font-bold text-slate-800 dark:text-white">سجل استخدام أكواد الخصم</h3>
+                    <button type="button" onclick="window.clearCouponUsageLog()" class="text-xs font-bold text-rose-500 hover:underline">مسح السجل</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right text-sm">
+                        <thead class="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-200">
+                            <tr>
+                                <th class="p-3">الكود</th>
+                                <th class="p-3">النسبة</th>
+                                <th class="p-3">الطالب</th>
+                                <th class="p-3">الدورة</th>
+                                <th class="p-3">التاريخ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="coupon-usage-log">
+                            <tr><td colspan="5" class="p-4 text-center text-slate-400">لا توجد عمليات استخدام حتى الآن.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        </section>
+
+        <!-- Courses Management -->
+        <section data-admin-view="students" class="hidden space-y-6">
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+            <h2 class="text-xl font-bold text-brand-primary mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-book-open"></i> إدارة جميع الكورسات والحصص
+            </h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-right text-sm">
+                    <thead class="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-200">
+                        <tr>
+                            <th class="p-3">اسم الكورس</th>
+                            <th class="p-3">المعلم</th>
+                            <th class="p-3">عدد الحصص</th>
+                            <th class="p-3">الإجراء</th>
+                        </tr>
+                    </thead>
+                    <tbody id="courses-list">
+                        <tr><td colspan="4" class="p-4 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin ml-2"></i>جاري تحميل البيانات...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        </section>
+
+    </main>
+
+
+    <!-- Teacher / Student Details -->
+    <div id="admin-details-modal" class="hidden fixed inset-0 z-[70] bg-slate-900/70 backdrop-blur-sm items-center justify-center p-4">
+        <div class="relative w-full max-w-5xl max-h-[92vh] overflow-y-auto rounded-3xl bg-white dark:bg-slate-800 shadow-2xl border border-slate-200 dark:border-slate-700">
+            <button type="button" onclick="window.closeAdminDetailsModal()" class="absolute left-4 top-4 z-10 w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-200 font-black">×</button>
+            <div id="admin-details-modal-content" class="p-5 sm:p-7"></div>
+        </div>
+    </div>
+
+    <div id="receipt-view-modal" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm items-center justify-center p-4">
+        <div class="relative bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-4xl p-4">
+            <div class="flex justify-between items-center mb-4 gap-3">
+                <div class="flex items-center gap-2">
+                    <button id="receipt-view-zoom-btn" onclick="toggleReceiptZoom()" class="bg-brand-primary text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-indigo-700 transition">تكبير</button>
+                    <span class="text-sm font-semibold text-slate-700 dark:text-slate-200">عرض الإيصال</span>
+                </div>
+                <button onclick="closeReceiptModal()" class="text-slate-500 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white text-xl">×</button>
+            </div>
+            <div class="overflow-auto rounded-3xl border border-slate-200 dark:border-slate-700 p-2 bg-slate-50 dark:bg-slate-900">
+                <img id="receipt-view-img" src="" alt="Receipt" class="mx-auto block" />
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase Integration -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, deleteDoc, addDoc, doc, updateDoc, setDoc, query, where, getDoc, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyBRiobwgAb16d13kgCoy3r8t8zuNGrImPQ",
+          authDomain: "masar1-7121c.firebaseapp.com",
+          projectId: "masar1-7121c",
+          storageBucket: "masar1-7121c.firebasestorage.app",
+          messagingSenderId: "1014623132646",
+          appId: "1:1014623132646:web:b150e651b5b1548b081427"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const SUPPORT_TELEGRAM_CHAT_ID = '-1004410499441';
+        const TELEGRAM_BOT_TOKEN = '8800012522:AAGNIm28oqlQBKFNqFuYVcKpEkpEaZhWEeM';
+
+        function formatSupportDate(dateValue) {
+            if (!dateValue) return 'غير محدد';
+            const timestamp = typeof dateValue === 'string' ? new Date(dateValue) : dateValue.toDate ? dateValue.toDate() : new Date(dateValue);
+            return timestamp.toLocaleString('ar-EG', {
+                year: 'numeric',
+                month: 'numeric',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function escapeHtml(text = '') {
+            return String(text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function toggleSupportDrawer() {
+            const drawer = document.getElementById('support-drawer');
+            if (drawer) {
+                drawer.classList.toggle('hidden');
+            }
+            if (!drawer.classList.contains('hidden')) {
+                refreshSupportMessages();
+            }
+        }
+
+        function getSupportMessagesCache() {
+            try {
+                return JSON.parse(localStorage.getItem('masar_support_messages_cache') || '[]');
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveSupportMessagesCache(messages) {
+            try {
+                localStorage.setItem('masar_support_messages_cache', JSON.stringify(messages.slice(0, 100)));
+            } catch (e) {}
+        }
+
+        async function refreshSupportMessages() {
+            const list = document.getElementById('support-messages-list');
+            if (!list) return;
+
+            list.innerHTML = '<div class="p-5 text-center text-slate-400">جاري تحميل الرسائل...</div>';
+
+            try {
+                const snapshot = await getDocs(query(collection(db, 'support_messages'), orderBy('createdAt', 'desc')));
+                const remoteMessages = snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
+                const cachedMessages = getSupportMessagesCache();
+                const merged = [...remoteMessages];
+
+                cachedMessages.forEach((cachedMessage) => {
+                    const alreadyExists = merged.some((item) => item.id === cachedMessage.id || (item.message && cachedMessage.message && item.message === cachedMessage.message && item.createdAt === cachedMessage.createdAt));
+                    if (!alreadyExists) {
+                        merged.push(cachedMessage);
+                    }
+                });
+
+                merged.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+                saveSupportMessagesCache(merged);
+                renderSupportMessages(merged);
+            } catch (error) {
+                console.error('Support messages refresh failed:', error);
+                const cachedMessages = getSupportMessagesCache();
+                if (cachedMessages.length) {
+                    renderSupportMessages(cachedMessages);
+                } else {
+                    list.innerHTML = '<div class="p-5 text-center text-slate-400">لا توجد رسائل دعم فني حتى الآن.</div>';
+                }
+            }
+        }
+
+        function renderSupportMessages(messages) {
+            const list = document.getElementById('support-messages-list');
+            if (!list) return;
+
+            if (!messages.length) {
+                list.innerHTML = '<div class="p-5 text-center text-slate-400">لا توجد رسائل دعم فني حتى الآن.</div>';
+                return;
+            }
+
+            list.innerHTML = messages.map((message) => {
+                const messageId = message.id || '';
+                const senderName = message.name || 'غير محدد';
+                const senderEmail = message.email || 'غير محدد';
+                const telegramId = message.telegramChatId || 'غير محدد';
+                const createdAt = formatSupportDate(message.createdAt);
+                const isReplied = message.replied === true || message.replySent === true;
+
+                return `
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+                        <div class="flex items-start justify-between gap-3 mb-3">
+                            <div>
+                                <p class="text-sm font-black text-slate-800">${escapeHtml(senderName)}</p>
+                                <p class="text-xs text-slate-500 mt-1">${escapeHtml(senderEmail)}</p>
+                            </div>
+                            <span class="rounded-full ${isReplied ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-600'} border ${isReplied ? 'border-emerald-500/20' : 'border-amber-500/20'} px-2.5 py-1 text-[10px] font-black">
+                                ${isReplied ? 'تم الرد' : 'جديد'}
+                            </span>
+                        </div>
+
+                        <div class="grid gap-2 text-xs text-slate-500 md:grid-cols-2 mb-3">
+                            <span><strong>تليجرام:</strong> ${escapeHtml(telegramId)}</span>
+                            <span><strong>التاريخ:</strong> ${escapeHtml(createdAt)}</span>
+                        </div>
+
+                        <div class="rounded-2xl border border-slate-200 bg-white p-3 text-sm leading-7 text-slate-700">
+                            ${escapeHtml(message.message || 'لا توجد رسالة.')}
+                        </div>
+
+                        ${message.replyText ? `
+                            <div class="mt-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-3">
+                                <p class="text-[11px] font-black text-emerald-700 mb-1">رد الإدارة:</p>
+                                <p class="text-sm text-emerald-800">${escapeHtml(message.replyText)}</p>
+                            </div>
+                        ` : ''}
+
+                        <div class="mt-4 flex justify-end gap-2">
+                            <button type="button" data-reply-id="${messageId}" data-chat-id="${escapeHtml(telegramId)}" class="reply-support-btn bg-brand-primary text-white px-3 py-2 text-xs font-bold rounded-xl hover:bg-indigo-700 transition">
+                                <i class="fa-solid fa-reply ml-1"></i> ريبلاي
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.querySelectorAll('.reply-support-btn').forEach((button) => {
+                button.addEventListener('click', async () => {
+                    const messageId = button.dataset.replyId;
+                    const messageValue = window.prompt('اكتب ردك على المستخدم هنا:', '');
+                    if (!messageValue || !messageValue.trim()) return;
+
+                    try {
+                        if (messageId) {
+                            const ref = doc(db, 'support_messages', messageId);
+                            await updateDoc(ref, {
+                                replied: true,
+                                replyText: messageValue.trim(),
+                                repliedAt: new Date().toISOString(),
+                                status: 'replied'
+                            });
+                        }
+
+                        window.alert('تم حفظ الرد بنجاح في Firestore.');
+                        const list = document.getElementById('support-messages-list');
+                        if (list) {
+                            const currentMessages = Array.from(list.querySelectorAll('.reply-support-btn'));
+                            if (currentMessages.length) {
+                                const activeButton = currentMessages.find((btn) => btn.dataset.replyId === messageId);
+                                if (activeButton) {
+                                    const card = activeButton.closest('div.rounded-2xl');
+                                    if (card) {
+                                        const replyBox = document.createElement('div');
+                                        replyBox.className = 'mt-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-3';
+                                        replyBox.innerHTML = `<p class="text-[11px] font-black text-emerald-700 mb-1">رد الإدارة:</p><p class="text-sm text-emerald-800">${escapeHtml(messageValue.trim())}</p>`;
+                                        const existingReply = card.querySelector('.bg-emerald-50');
+                                        if (existingReply) {
+                                            existingReply.remove();
+                                        }
+                                        card.querySelector('.mt-4.flex.justify-end.gap-2')?.insertAdjacentElement('beforebegin', replyBox);
+                                    }
+                                }
+                            }
+                        }
+                        window.refreshSupportMessages?.();
+                    } catch (error) {
+                        console.error('Reply support failed:', error);
+                        window.alert('تعذر حفظ الرد، حاول مرة أخرى.');
+                    }
+                });
+            });
+        }
+
+        function subscribeSupportMessages() {
+            const q = query(collection(db, 'support_messages'), orderBy('createdAt', 'desc'));
+            onSnapshot(q, (snapshot) => {
+                const messages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                saveSupportMessagesCache(messages);
+                renderSupportMessages(messages);
+            }, (error) => {
+                console.error('Support messages listener failed:', error);
+                const list = document.getElementById('support-messages-list');
+                if (list) {
+                    list.innerHTML = '<div class="p-5 text-center text-red-500">حدثت مشكلة أثناء تحميل رسائل الدعم.</div>';
+                }
+            });
+        }
+
+        window.sendPlatformTelegramAlert = function(title, details) {
+            const text = `📣 ${title}\n\n${details || 'لا يوجد تفاصيل إضافية.'}`;
+            const chatId = '-1004410499441';
+            const botToken = '8800012522:AAGNIm28oqlQBKFNqFuYVcKpEkpEaZhWEeM';
+
+            fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: chatId, text })
+            }).then(response => response.json()).then(data => {
+                if (!data.ok) {
+                    console.warn('تعذر إرسال تنبيه Telegram:', data.description || 'خطأ غير معروف');
+                }
+            }).catch(err => console.warn('تعذر إرسال تنبيه Telegram:', err));
+        };
+
+        // دالة مساعدة لاستخراج القيمة بغض النظر عن حالة الأحرف أو المسمى
+        function getValue(data, keys) {
+            for (let key of keys) {
+                if (data[key] !== undefined && data[key] !== null && data[key] !== "") {
+                    return data[key];
+                }
+            }
+            return null;
+        }
+
+        function walletDate(value) {
+            return value ? new Date(value).toLocaleString('ar-EG') : 'غير محدد';
+        }
+
+        window.showAdminSection = function(sectionName, selectedButton) {
+            document.querySelectorAll('[data-admin-view]').forEach(section => {
+                section.classList.toggle('hidden', section.dataset.adminView !== sectionName);
+            });
+            document.querySelectorAll('.admin-nav-button').forEach(button => {
+                button.removeAttribute('aria-current');
+            });
+            const activeButton = selectedButton || Array.from(document.querySelectorAll('.admin-nav-button')).find(button => button.getAttribute('onclick')?.includes(`'${sectionName}'`));
+            activeButton?.setAttribute('aria-current', 'page');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        function formatDashboardCurrency(amount) {
+            return `${Number(amount || 0).toLocaleString('ar-EG', { maximumFractionDigits: 2 })} ج.م`;
+        }
+
+        async function loadDashboardMetrics() {
+            const revenueTable = document.getElementById('teacher-revenue-list');
+            try {
+                const [courseSubscriptions, lectureSubscriptions, teachers, students] = await Promise.all([
+                    getDocs(collection(db, 'subscriptions')),
+                    getDocs(collection(db, 'lectureSubscriptions')),
+                    getDocs(collection(db, 'teachers')),
+                    getDocs(collection(db, 'students'))
+                ]);
+                const teacherNames = new Map();
+                let approvedTeachers = 0;
+                teachers.forEach(teacherDoc => {
+                    const teacher = teacherDoc.data();
+                    const email = String(getValue(teacher, ['email', 'mail', 'userEmail']) || '').toLowerCase();
+                    const status = String(teacher.status || 'approved').toLowerCase();
+                    if (status === 'approved') approvedTeachers += 1;
+                    if (email) teacherNames.set(email, getValue(teacher, ['name', 'fullname', 'teacherName', 'userName', 'username']) || email);
+                });
+
+                const now = new Date();
+                const teacherTotals = new Map();
+                let totalRevenue = 0;
+                let monthRevenue = 0;
+                let approvedCount = 0;
+                const subscriptionDocs = [...courseSubscriptions.docs, ...lectureSubscriptions.docs];
+                subscriptionDocs.forEach(subscriptionDoc => {
+                    const data = subscriptionDoc.data();
+                    if (String(data.status || '').toLowerCase() !== 'approved') return;
+                    approvedCount += 1;
+                    const amount = Number(getValue(data, ['finalAmount', 'amount', 'price', 'paymentAmount']) || 0);
+                    const safeAmount = Number.isFinite(amount) ? amount : 0;
+                    totalRevenue += safeAmount;
+                    const createdValue = data.approvedAt || data.createdAt;
+                    const createdAt = createdValue?.toDate ? createdValue.toDate() : new Date(createdValue || '');
+                    if (!Number.isNaN(createdAt.getTime()) && createdAt.getFullYear() === now.getFullYear() && createdAt.getMonth() === now.getMonth()) {
+                        monthRevenue += safeAmount;
+                    }
+
+                    const email = String(data.teacherEmail || '').toLowerCase();
+                    const teacherKey = email || String(data.teacherName || 'unknown');
+                    const teacherTotal = teacherTotals.get(teacherKey) || { name: teacherNames.get(email) || data.teacherName || 'مدرس غير محدد', count: 0, revenue: 0 };
+                    teacherTotal.count += 1;
+                    teacherTotal.revenue += safeAmount;
+                    teacherTotals.set(teacherKey, teacherTotal);
+                });
+
+                document.getElementById('dashboard-total-revenue').textContent = formatDashboardCurrency(totalRevenue);
+                document.getElementById('dashboard-month-revenue').textContent = formatDashboardCurrency(monthRevenue);
+                document.getElementById('dashboard-approved-count').textContent = approvedCount.toLocaleString('ar-EG');
+                document.getElementById('dashboard-teacher-count').textContent = approvedTeachers.toLocaleString('ar-EG');
+                document.getElementById('dashboard-student-count').textContent = `${students.size.toLocaleString('ar-EG')} طالب مسجل`;
+                document.getElementById('dashboard-updated-at').textContent = `آخر تحديث: ${new Date().toLocaleString('ar-EG')}`;
+
+                const sortedTeachers = Array.from(teacherTotals.values()).sort((left, right) => right.revenue - left.revenue);
+                revenueTable.innerHTML = sortedTeachers.length ? sortedTeachers.map(teacher => {
+                    const share = totalRevenue > 0 ? (teacher.revenue / totalRevenue) * 100 : 0;
+                    return `<tr class="border-t border-slate-100 dark:border-slate-700"><td class="p-4 font-bold">${escapeHtml(teacher.name)}</td><td class="p-4">${teacher.count.toLocaleString('ar-EG')}</td><td class="p-4 font-bold text-emerald-600">${formatDashboardCurrency(teacher.revenue)}</td><td class="p-4"><div class="flex items-center gap-3"><div class="h-2 min-w-16 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700"><span class="block h-full rounded-full bg-emerald-500" style="width:${share.toFixed(1)}%"></span></div><span class="w-12 text-xs text-slate-500">${share.toFixed(1)}%</span></div></td></tr>`;
+                }).join('') : '<tr><td colspan="4" class="p-5 text-center text-slate-400">لا توجد اشتراكات مقبولة حتى الآن.</td></tr>';
+            } catch (error) {
+                console.error('Dashboard metrics error:', error);
+                revenueTable.innerHTML = '<tr><td colspan="4" class="p-5 text-center text-rose-500">تعذر تحميل بيانات الإيرادات.</td></tr>';
+                ['dashboard-total-revenue', 'dashboard-month-revenue', 'dashboard-approved-count', 'dashboard-teacher-count'].forEach(id => {
+                    document.getElementById(id).textContent = 'غير متاح';
+                });
+                document.getElementById('dashboard-student-count').textContent = 'تعذر تحميل عدد الطلاب';
+            }
+        }
+
+        async function findStudentByEmail(email) {
+            const snap = await getDocs(query(collection(db, 'students'), where('email', '==', email)));
+            return snap.empty ? null : { id: snap.docs[0].id, data: snap.docs[0].data() };
+        }
+
+        async function loadWalletRequests() {
+            const topupsList = document.getElementById('wallet-topups-list');
+            const purchasesList = document.getElementById('wallet-purchases-list');
+            try {
+                const [topups, purchases] = await Promise.all([
+                    getDocs(query(collection(db, 'wallet_topups'), where('status', '==', 'pending'))),
+                    getDocs(query(collection(db, 'wallet_purchase_requests'), where('status', '==', 'pending')))
+                ]);
+                topupsList.innerHTML = topups.empty ? '<p class="text-sm text-slate-400 text-center py-6">لا توجد طلبات شحن معلقة.</p>' : topups.docs.map(item => {
+                    const data = item.data();
+                    return `<article class="rounded-2xl border border-slate-200 dark:border-slate-700 p-4"><div class="flex items-start justify-between gap-3"><div><h3 class="font-black text-slate-800 dark:text-white">${escapeHtml(data.studentName || 'طالب غير محدد')}</h3><p class="text-xs text-slate-400">${escapeHtml(data.studentEmail || '')}</p></div><strong class="text-emerald-600">${Number(data.netAmount || 0).toFixed(2)} ج.م</strong></div><div class="grid grid-cols-2 gap-2 text-xs mt-3"><span>الدفع: ${Number(data.paidAmount || 0).toFixed(2)} ج.م</span><span>العمولة: ${Number(data.fee || 0).toFixed(2)} ج.م</span><span>اسم المحول: ${escapeHtml(data.senderName || 'غير محدد')}</span><span>رقم المحول: ${escapeHtml(data.senderPhone || 'غير محدد')}</span></div><p class="text-[11px] text-slate-400 mt-2">${walletDate(data.createdAt)}</p><div class="flex flex-wrap gap-2 mt-3"><button onclick="window.previewReceipt('${data.receiptImage || ''}')" class="text-xs font-bold text-cyan-600 underline">عرض الإيصال</button><button onclick="window.approveWalletTopup('${item.id}')" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold">قبول وشحن</button><button onclick="window.rejectWalletRequest('wallet_topups','${item.id}')" class="bg-rose-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold">رفض</button><a href="https://wa.me/20${String(data.senderPhone || '').replace(/^0/, '')}" target="_blank" class="bg-green-50 text-green-600 px-3 py-1.5 rounded-lg text-xs font-bold"><i class="fa-brands fa-whatsapp"></i> واتساب</a></div></article>`;
+                }).join('');
+                purchasesList.innerHTML = purchases.empty ? '<p class="text-sm text-slate-400 text-center py-6">لا توجد مشتريات معلقة.</p>' : purchases.docs.map(item => {
+                    const data = item.data();
+                    return `<article class="rounded-2xl border border-slate-200 dark:border-slate-700 p-4"><div class="flex items-start justify-between gap-3"><div><h3 class="font-black text-slate-800 dark:text-white">${escapeHtml(data.studentName || 'طالب غير محدد')}</h3><p class="text-xs text-slate-400">${escapeHtml(data.studentEmail || '')}</p></div><strong class="text-indigo-600">${Number(data.amount || 0).toFixed(2)} ج.م</strong></div><div class="grid grid-cols-2 gap-2 text-xs mt-3"><span>المحتوى: ${escapeHtml(data.courseTitle || data.lectureTitle || 'غير محدد')}</span><span>المعلم: ${escapeHtml(data.teacherName || data.teacherEmail || 'غير محدد')}</span><span>الرصيد وقت الطلب: ${Number(data.walletBalanceAtRequest || 0).toFixed(2)} ج.م</span><span>طريقة الدفع: المحفظة</span></div><p class="text-[11px] text-slate-400 mt-2">${walletDate(data.createdAt)}</p><div class="flex gap-2 mt-3"><button onclick="window.approveWalletPurchase('${item.id}')" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold">قبول وفتح المحتوى</button><button onclick="window.rejectWalletRequest('wallet_purchase_requests','${item.id}')" class="bg-rose-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold">رفض</button></div></article>`;
+                }).join('');
+            } catch (error) {
+                topupsList.innerHTML = purchasesList.innerHTML = '<p class="text-sm text-rose-500 text-center py-6">تعذر تحميل طلبات المحفظة.</p>';
+                console.error('Wallet requests error:', error);
+            }
+        }
+
+        window.approveWalletTopup = async function(requestId) {
+            try {
+                const requestRef = doc(db, 'wallet_topups', requestId);
+                const requestSnap = await getDoc(requestRef);
+                if (!requestSnap.exists() || requestSnap.data().status !== 'pending') return;
+                const request = requestSnap.data();
+                const student = await findStudentByEmail(request.studentEmail);
+                if (!student) throw new Error('حساب الطالب غير موجود');
+                const balance = Number(student.data.walletBalance || 0);
+                const transactions = Array.isArray(student.data.walletTransactions) ? student.data.walletTransactions : [];
+                transactions.unshift({ type: 'topup', title: 'شحن المحفظة عبر فودافون كاش', amount: Number(request.netAmount || 0), statusLabel: 'تم القبول', createdAt: new Date().toISOString() });
+                await updateDoc(doc(db, 'students', student.id), { walletBalance: balance + Number(request.netAmount || 0), walletTransactions: transactions.slice(0, 100) });
+                await updateDoc(requestRef, { status: 'approved', reviewedAt: new Date().toISOString() });
+                await loadWalletRequests();
+            } catch (error) { alert('حدث خطأ أثناء شحن المحفظة: ' + error.message); }
+        };
+
+        window.approveWalletPurchase = async function(requestId) {
+            try {
+                const requestRef = doc(db, 'wallet_purchase_requests', requestId);
+                const requestSnap = await getDoc(requestRef);
+                if (!requestSnap.exists() || requestSnap.data().status !== 'pending') return;
+                const request = requestSnap.data();
+                const student = await findStudentByEmail(request.studentEmail);
+                if (!student || Number(student.data.walletBalance || 0) < Number(request.amount || 0)) throw new Error('الرصيد الحالي غير كافٍ لإتمام الطلب');
+                const amount = Number(request.amount || 0);
+                const transactions = Array.isArray(student.data.walletTransactions) ? student.data.walletTransactions : [];
+                transactions.unshift({ type: 'purchase', title: `شراء ${request.courseTitle || request.lectureTitle || 'محتوى'}`, amount, statusLabel: 'تم القبول', createdAt: new Date().toISOString() });
+                await updateDoc(doc(db, 'students', student.id), { walletBalance: Number(student.data.walletBalance || 0) - amount, walletTransactions: transactions.slice(0, 100) });
+                const subscriptionCollection = request.lectureId ? 'lectureSubscriptions' : 'subscriptions';
+                const subscription = { ...request, status: 'approved', approvedAt: new Date().toISOString() };
+                delete subscription.walletBalanceAtRequest;
+                await addDoc(collection(db, subscriptionCollection), subscription);
+                await updateDoc(requestRef, { status: 'approved', reviewedAt: new Date().toISOString() });
+                await loadWalletRequests();
+            } catch (error) { alert('حدث خطأ ولم يتم فتح المحتوى: ' + error.message); }
+        };
+
+        window.rejectWalletRequest = async function(collectionName, requestId) {
+            const reason = prompt('اكتب سبب الرفض ليظهر للطالب:', 'تعذر التحقق من التحويل');
+            if (reason === null) return;
+            try {
+                const requestRef = doc(db, collectionName, requestId);
+                const requestSnap = await getDoc(requestRef);
+                const request = requestSnap.exists() ? requestSnap.data() : {};
+                const student = await findStudentByEmail(request.studentEmail);
+                if (student) {
+                    const transactions = Array.isArray(student.data.walletTransactions) ? student.data.walletTransactions : [];
+                    transactions.unshift({ type: 'notice', title: collectionName === 'wallet_topups' ? 'تم رفض طلب شحن المحفظة' : 'تم رفض طلب شراء المحتوى', amount: Number(request.netAmount || request.amount || 0), statusLabel: reason || 'تم رفض الطلب', createdAt: new Date().toISOString() });
+                    await updateDoc(doc(db, 'students', student.id), { walletTransactions: transactions.slice(0, 100) });
+                }
+                await updateDoc(requestRef, { status: 'rejected', rejectionReason: reason || 'تم رفض الطلب', reviewedAt: new Date().toISOString() });
+                await loadWalletRequests();
+            }
+            catch (error) { alert('حدث خطأ أثناء رفض الطلب: ' + error.message); }
+        };
+
+        async function loadOwnerDashboard() {
+            try {
+                loadDashboardMetrics();
+                await loadWalletRequests();
+                // 1. Fetch pending teacher plan requests
+                const planRequestsSnap = await getDocs(collection(db, "teacher_plan_requests"));
+                const pendingList = document.getElementById('pending-teachers-list');
+
+                pendingList.innerHTML = '';
+
+                let hasPending = false;
+
+                planRequestsSnap.forEach(d => {
+                    const req = d.data();
+                    const reqId = d.id;
+                    const reqStatus = (req.status || 'pending').toLowerCase();
+                    if (reqStatus !== 'pending') return;
+
+                    const name = getValue(req, ['teacherName', 'name', 'fullname', 'userName', 'username']) || 'غير محدد';
+                    const spec = getValue(req, ['spec', 'subject', 'specialization', 'subjectName', 'major']) || 'عام';
+                    const email = getValue(req, ['teacherEmail', 'email', 'mail', 'userEmail']) || 'غير محدد';
+                    const phone = getValue(req, ['teacherPhone', 'phone', 'mobile', 'teacherMobile']) || 'غير متاح';
+                    const password = getValue(req, ['teacherPassword', 'password']) || 'غير متاح';
+                    const plan = getValue(req, ['planLabel', 'planType', 'selectedPlan', 'package', 'planName', 'subscription']) || 'غير محددة';
+                    const amount = getValue(req, ['amountLabel', 'amount', 'price', 'paymentAmount', 'cost', 'money', 'paid']) || 'غير محدد';
+                    const receiptUrl = getValue(req, ['receiptImage', 'receipt', 'receiptUrl', 'paymentReceipt', 'image', 'img', 'proof']);
+
+                    const receiptHTML = receiptUrl 
+                        ? `<button onclick="previewReceipt('${receiptUrl}')" class="text-cyan-500 hover:text-cyan-700 font-semibold flex items-center gap-1 text-left"><i class="fa-solid fa-file-invoice"></i> عرض الإيصال</button>`
+                        : `<span class="text-slate-400">لا يوجد</span>`;
+
+                    hasPending = true;
+                    pendingList.innerHTML += `
+                        <tr class="border-b border-slate-100 dark:border-slate-700">
+                            <td class="p-3 font-bold">${name}</td>
+                            <td class="p-3">${spec}</td>
+                            <td class="p-3">${email}</td>
+                            <td class="p-3 font-mono text-[11px]">${phone}</td>
+                            <td class="p-3 font-mono text-[11px]">${password}</td>
+                            <td class="p-3"><span class="bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 px-2.5 py-1 rounded-md text-xs font-bold">${plan}</span></td>
+                            <td class="p-3 font-semibold text-emerald-600 dark:text-emerald-400">${amount}</td>
+                            <td class="p-3">${receiptHTML}</td>
+                            <td class="p-3 text-center">
+                                <div class="flex items-center justify-center gap-2">
+                                    <button onclick="approveTeacherPlanRequest('${reqId}', '${email}')" class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition flex items-center gap-1">
+                                        <i class="fa-solid fa-check"></i> قبول
+                                    </button>
+                                    <button onclick="rejectTeacherPlanRequest('${reqId}', '${email}')" class="bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition flex items-center gap-1">
+                                        <i class="fa-solid fa-xmark"></i> رفض
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                if(!hasPending) pendingList.innerHTML = '<tr><td colspan="9" class="p-4 text-center text-slate-400">لا توجد طلبات معلقة حالياً</td></tr>';
+
+                // 2. Fetch Courses
+                const coursesSnap = await getDocs(collection(db, "courses"));
+                const coursesList = document.getElementById('courses-list');
+                coursesList.innerHTML = '';
+
+                if(coursesSnap.empty) {
+                    coursesList.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-400">لا توجد دورات مضافة</td></tr>';
+                } else {
+                    coursesSnap.forEach(d => {
+                        const c = d.data();
+                        const title = getValue(c, ['title', 'name', 'courseName']) || 'بدون عنوان';
+                        const teacherName = getValue(c, ['teacherName', 'teacher', 'instructor']) || 'غير محدد';
+                        const lessonsCount = Array.isArray(c.lessons) ? c.lessons.length : (c.lessonsCount || 0);
+                        
+                        coursesList.innerHTML += `
+                            <tr class="border-b border-slate-100 dark:border-slate-700">
+                                <td class="p-3 font-bold">${title}</td>
+                                <td class="p-3">${teacherName}</td>
+                                <td class="p-3">${lessonsCount} حصة</td>
+                                <td class="p-3">
+                                    <button onclick="deleteCourse('${d.id}')" class="bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition">
+                                        <i class="fa-solid fa-trash ml-1"></i> حذف الكورس
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+            } catch (error) {
+                console.error("Error loading dashboard data: ", error);
+            }
+        }
+
+        // ===== المعلمون المقبولون: تحميل عند الفتح فقط لتقليل عدد القراءات =====
+        let approvedTeachersLoaded = false;
+
+        async function loadApprovedTeachers() {
+            const approvedList = document.getElementById('approved-teachers-list');
+            approvedList.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin ml-2"></i>جاري تحميل البيانات...</td></tr>';
+            try {
+                const teachersSnap = await getDocs(collection(db, "teachers"));
+                approvedList.innerHTML = '';
+                let hasApproved = false;
+                allTeachersAdminCache = {};
+
+                teachersSnap.forEach(d => {
+                    allTeachersAdminCache[d.id] = { id: d.id, ...d.data() };
+                    const data = d.data();
+                    const id = d.id;
+                    const status = (data.status || 'approved').toLowerCase();
+                    if (status !== 'approved') return;
+
+                    const name = getValue(data, ['name', 'fullname', 'teacherName', 'userName', 'username']) || 'غير محدد';
+                    const spec = getValue(data, ['spec', 'subject', 'specialization', 'subjectName', 'major']) || 'عام';
+                    const email = getValue(data, ['email', 'mail', 'userEmail']) || 'غير محدد';
+                    const phone = getValue(data, ['phone', 'mobile', 'teacherPhone', 'teacherMobile']) || 'غير متاح';
+                    const password = getValue(data, ['password', 'teacherPassword']) || 'غير متاح';
+                    const plan = getValue(data, ['currentPlan', 'plan', 'selectedPlan', 'package', 'planName', 'subscription']) || 'غير محددة';
+                    const amount = getValue(data, ['amount', 'price', 'paymentAmount', 'cost', 'money', 'paid']) || 'غير محدد';
+                    const receiptUrl = getValue(data, ['receipt', 'receiptUrl', 'receiptImage', 'paymentReceipt', 'image', 'img', 'proof']);
+
+                    const receiptHTML = receiptUrl 
+                        ? `<button onclick="previewReceipt('${receiptUrl}')" class="text-cyan-500 hover:text-cyan-700 font-semibold flex items-center gap-1 text-left"><i class="fa-solid fa-file-invoice"></i> عرض الإيصال</button>`
+                        : `<span class="text-slate-400">لا يوجد</span>`;
+
+                    hasApproved = true;
+                    approvedList.innerHTML += `
+                        <tr class="border-b border-slate-100 dark:border-slate-700">
+                            <td class="p-3 font-bold">${name}</td>
+                            <td class="p-3">${spec}</td>
+                            <td class="p-3">${email}</td>
+                            <td class="p-3 font-mono text-[11px]">${phone}</td>
+                            <td class="p-3 font-mono text-[11px]">${password}</td>
+                            <td class="p-3"><span class="bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 px-2.5 py-1 rounded-md text-xs font-bold">${plan}</span></td>
+                            <td class="p-3 font-semibold text-emerald-600 dark:text-emerald-400">${amount}</td>
+                            <td class="p-3">${receiptHTML}</td>
+                            <td class="p-3 text-center">
+                                <div class="flex flex-wrap items-center justify-center gap-2">
+                                    <button onclick="window.openTeacherAdminDetails('${encodeURIComponent(email)}')" class="bg-brand-primary hover:bg-indigo-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition flex items-center gap-1">
+                                        <i class="fa-solid fa-id-card"></i> فتح التفاصيل
+                                    </button>
+                                    <button onclick="deleteTeacher('${id}')" class="bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition flex items-center gap-1">
+                                        <i class="fa-solid fa-trash"></i> حذف
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                if (!hasApproved) approvedList.innerHTML = '<tr><td colspan="9" class="p-4 text-center text-slate-400">لا يوجد معلمون مقبولون بعد</td></tr>';
+            } catch (error) {
+                console.error('Error loading approved teachers:', error);
+                approvedList.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-rose-400">حدث خطأ أثناء تحميل بيانات المعلمين</td></tr>';
+            }
+        }
+
+        window.toggleApprovedTeachers = async function() {
+            const panel = document.getElementById('approved-teachers-panel');
+            const chevron = document.getElementById('approved-teachers-chevron');
+            if (!panel) return;
+            const wasHidden = panel.classList.contains('hidden');
+            panel.classList.toggle('hidden');
+            chevron?.classList.toggle('rotate-180');
+            if (wasHidden && !approvedTeachersLoaded) {
+                approvedTeachersLoaded = true;
+                await loadApprovedTeachers();
+            }
+        };
+
+        // ===== الطلاب الموجودون: تحميل عند الفتح فقط + بحث محلي بدون قراءات إضافية =====
+        let studentsLoaded = false;
+        let allStudentsCache = [];
+
+        function renderStudentsTable(students) {
+            const list = document.getElementById('students-list');
+            if (!list) return;
+            if (!students.length) {
+                list.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-400">لا يوجد طلاب مطابقون للبحث</td></tr>';
+                return;
+            }
+            list.innerHTML = students.map(s => {
+                const name = getValue(s, ['name', 'fullname', 'studentName']) || 'غير محدد';
+                const email = getValue(s, ['email', 'mail', 'userEmail']) || 'غير محدد';
+                const phone = getValue(s, ['phone', 'mobile']) || 'غير متاح';
+                const stage = getValue(s, ['stage', 'grade', 'className']) || 'غير محدد';
+                const qaid = getValue(s, ['qaidNumber']) || 'غير متاح';
+                const password = getValue(s, ['password']) || 'غير متاح';
+                return `
+                    <tr class="border-b border-slate-100 dark:border-slate-700">
+                        <td class="p-3 font-bold">${escapeHtml(name)}</td>
+                        <td class="p-3">${escapeHtml(email)}</td>
+                        <td class="p-3 font-mono">${escapeHtml(phone)}</td>
+                        <td class="p-3 font-mono">${escapeHtml(stage)}</td>
+                        <td class="p-3 font-mono">${escapeHtml(qaid)}</td>
+                        <td class="p-3 font-mono">${escapeHtml(password)}</td>
+                        <td class="p-3 text-center">
+                            <div class="flex flex-wrap items-center justify-center gap-2">
+                                <button onclick="window.openStudentAdminDetails('${s.id}')" class="bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition">
+                                    <i class="fa-solid fa-user-graduate"></i> فتح    
+                                <button onclick="window.deleteStudent('${s.id}')" class="bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition">
+                                    <i class="fa-solid fa-trash"></i> حذف
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function loadStudentsList() {
+            const list = document.getElementById('students-list');
+            list.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin ml-2"></i>جاري تحميل البيانات...</td></tr>';
+            try {
+                const studentsSnap = await getDocs(collection(db, "students"));
+                allStudentsCache = studentsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+                renderStudentsTable(allStudentsCache);
+            } catch (error) {
+                console.error('Error loading students:', error);
+                list.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-rose-400">حدث خطأ أثناء تحميل بيانات الطلاب</td></tr>';
+            }
+        }
+
+        window.filterStudentsList = function() {
+            const term = (document.getElementById('students-search-input')?.value || '').trim().toLowerCase();
+            if (!term) {
+                renderStudentsTable(allStudentsCache);
+                return;
+            }
+            const filtered = allStudentsCache.filter(s => {
+                const name = String(getValue(s, ['name', 'fullname', 'studentName']) || '').toLowerCase();
+                const email = String(getValue(s, ['email', 'mail', 'userEmail']) || '').toLowerCase();
+                const qaid = String(getValue(s, ['qaidNumber']) || '').toLowerCase();
+                return name.includes(term) || email.includes(term) || qaid.includes(term);
+            });
+            renderStudentsTable(filtered);
+        };
+
+        window.deleteStudent = async function(id) {
+            if (confirm('هل أنت متأكد من حذف حساب هذا الطالب نهائياً؟')) {
+                try {
+                    await deleteDoc(doc(db, "students", id));
+                    allStudentsCache = allStudentsCache.filter(s => s.id !== id);
+                    window.filterStudentsList();
+                } catch (error) {
+                    alert('حدث خطأ أثناء حذف الطالب: ' + error.message);
+                }
+            }
+        };
+
+        window.toggleStudentsPanel = async function() {
+            const panel = document.getElementById('students-panel');
+            const chevron = document.getElementById('students-chevron');
+            if (!panel) return;
+            const wasHidden = panel.classList.contains('hidden');
+            panel.classList.toggle('hidden');
+            chevron?.classList.toggle('rotate-180');
+            if (wasHidden && !studentsLoaded) {
+                studentsLoaded = true;
+                await loadStudentsList();
+            }
+        };
+
+
+        // ===== ملفات المعلم والطالب داخل لوحة الإدارة =====
+        function adminDetailValue(value, fallback = 'غير مضاف') {
+            return value !== undefined && value !== null && String(value).trim() !== '' ? String(value) : fallback;
+        }
+
+        function adminDetailRow(icon, label, value, extraClass = '') {
+            return `
+                <div class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40 p-4">
+                    <div class="flex items-center gap-2 text-xs font-black text-slate-400 mb-1.5">
+                        <i class="${icon} text-brand-primary"></i>${escapeHtml(label)}
+                    </div>
+                    <div class="font-bold text-sm text-slate-800 dark:text-slate-100 break-words ${extraClass}">${escapeHtml(adminDetailValue(value))}</div>
+                </div>`;
+        }
+
+        function getTeacherExtraValue(t, keys) {
+            for (const key of keys) {
+                if (t[key] !== undefined && t[key] !== null && String(t[key]).trim() !== '') return t[key];
+            }
+            return '';
+        }
+
+        window.closeAdminDetailsModal = function() {
+            const modal = document.getElementById('admin-details-modal');
+            if (!modal) return;
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        };
+
+        window.openTeacherAdminDetails = async function(encodedEmail) {
+            const email = decodeURIComponent(encodedEmail || '');
+            const teacher = Object.values(allTeachersAdminCache || {}).find(t => String(t.email || '').toLowerCase() === email.toLowerCase());
+            if (!teacher) {
+                alert('تعذر العثور على بيانات المعلم.');
+                return;
+            }
+
+            const modal = document.getElementById('admin-details-modal');
+            const content = document.getElementById('admin-details-modal-content');
+            if (!modal || !content) return;
+
+            content.innerHTML = `<div class="py-12 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin text-2xl"></i><p class="mt-3">جاري تحميل كل تفاصيل المعلم...</p></div>`;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            try {
+                const coursesSnap = await getDocs(collection(db, 'courses'));
+                const lecturesSnap = await getDocs(collection(db, 'lectures'));
+                const teacherCourses = coursesSnap.docs.map(d => ({id:d.id, ...d.data()})).filter(c => c.teacherEmail === teacher.email);
+                const teacherLectures = lecturesSnap.docs.map(d => ({id:d.id, ...d.data()})).filter(l => l.teacherEmail === teacher.email);
+
+                const coursePayments = teacherCourses.flatMap(c => [
+                    c.vodafoneNumber ? {type:'فودافون كاش', value:c.vodafoneNumber, source:c.title} : null,
+                    c.instapayNumber ? {type:'إنستا باي', value:c.instapayNumber, source:c.title} : null
+                ]).filter(Boolean);
+                const lecturePayments = teacherLectures.flatMap(l => [
+                    l.vodafoneNumber ? {type:'فودافون كاش', value:l.vodafoneNumber, source:l.title} : null,
+                    l.instapayNumber ? {type:'إنستا باي', value:l.instapayNumber, source:l.title} : null
+                ]).filter(Boolean);
+                const payments = [...coursePayments, ...lecturePayments];
+                const uniquePayments = payments.filter((item, idx, arr) => idx === arr.findIndex(x => x.type === item.type && x.value === item.value));
+
+                const avatar = teacher.avatar
+                    ? `<img src="${escapeHtml(teacher.avatar)}" class="w-24 h-24 rounded-3xl object-cover border border-slate-200 dark:border-slate-700 shadow-sm">`
+                    : `<div class="w-24 h-24 rounded-3xl bg-indigo-100 dark:bg-indigo-900/40 text-brand-primary flex items-center justify-center text-4xl font-black">${escapeHtml((teacher.name || 'م')[0])}</div>`;
+
+                const socialFields = [
+                    ['fa-brands fa-instagram','إنستجرام',getTeacherExtraValue(teacher,['instagram','instagramUrl','instagramUsername'])],
+                    ['fa-brands fa-facebook','فيسبوك',getTeacherExtraValue(teacher,['facebook','facebookUrl'])],
+                    ['fa-brands fa-whatsapp','واتساب',getTeacherExtraValue(teacher,['whatsapp','whatsappNumber'])],
+                    ['fa-brands fa-telegram','تليجرام',getTeacherExtraValue(teacher,['telegram','telegramUsername'])],
+                    ['fa-brands fa-youtube','يوتيوب',getTeacherExtraValue(teacher,['youtube','youtubeUrl'])],
+                    ['fa-brands fa-tiktok','تيك توك',getTeacherExtraValue(teacher,['tiktok','tiktokUrl'])]
+                ].filter(x => x[2]);
+
+                const teacherVodafone = getTeacherExtraValue(teacher,['vodafoneNumber','vodafone','vodafoneCash','vodafoneCashNumber']);
+                const teacherInstapay = getTeacherExtraValue(teacher,['instapayNumber','instapay','instaPay','instaPayNumber']);
+
+                content.innerHTML = `
+                    <div class="flex flex-col sm:flex-row items-start gap-5 border-b border-slate-200 dark:border-slate-700 pb-6">
+                        ${avatar}
+                        <div class="min-w-0 flex-1">
+                            <p class="text-xs font-black text-brand-primary">ملف المعلم</p>
+                            <h2 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1">${escapeHtml(adminDetailValue(teacher.name,'معلم بدون اسم'))}</h2>
+                            <p class="text-sm text-slate-500 mt-1">${escapeHtml(adminDetailValue(teacher.spec,'التخصص غير مضاف'))}</p>
+                            <div class="flex flex-wrap gap-2 mt-4">
+                                <span class="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 text-xs font-black">${escapeHtml(adminDetailValue(teacher.status,'approved'))}</span>
+                                <span class="px-3 py-1.5 rounded-xl bg-indigo-50 text-indigo-700 text-xs font-black">${escapeHtml(adminDetailValue(teacher.currentPlan || teacher.plan,'الخطة غير مضافة'))}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 class="text-lg font-black mt-6 mb-3">بيانات المعلم</h3>
+                    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        ${adminDetailRow('fa-solid fa-envelope','البريد الإلكتروني',teacher.email)}
+                        ${adminDetailRow('fa-solid fa-phone','رقم الهاتف',teacher.phone || teacher.mobile)}
+                        ${adminDetailRow('fa-solid fa-user-tie','التخصص',teacher.spec || teacher.subject || teacher.specialization)}
+                        ${adminDetailRow('fa-solid fa-wallet','الخطة',teacher.currentPlan || teacher.plan || teacher.selectedPlan)}
+                        ${adminDetailRow('fa-solid fa-money-bill','المبلغ',teacher.amount || teacher.price || teacher.paymentAmount)}
+                        ${adminDetailRow('fa-solid fa-calendar','بداية الاشتراك',teacher.planStartAt)}
+                        ${adminDetailRow('fa-solid fa-calendar-xmark','انتهاء الاشتراك',teacher.planExpireAt)}
+                        ${adminDetailRow('fa-solid fa-phone-volume','فودافون كاش',teacherVodafone)}
+                        ${adminDetailRow('fa-solid fa-building-columns','إنستا باي',teacherInstapay)}
+                        ${adminDetailRow('fa-solid fa-align-right','النبذة',getTeacherExtraValue(teacher,['bio','description','about','desc']))}
+                    </div>
+
+                    <h3 class="text-lg font-black mt-7 mb-3">التواصل والحسابات</h3>
+                    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        ${socialFields.length ? socialFields.map(x => adminDetailRow(x[0],x[1],x[2])).join('') : '<p class="text-sm text-slate-400 sm:col-span-3">لا توجد حسابات اجتماعية إضافية محفوظة في بيانات المعلم.</p>'}
+                    </div>
+
+                    <h3 class="text-lg font-black mt-7 mb-3">أرقام الدفع الموجودة في الكورسات والمحاضرات</h3>
+                    <div class="grid sm:grid-cols-2 gap-3">
+                        ${uniquePayments.length ? uniquePayments.map(p => adminDetailRow(p.type,`${p.type} — ${p.source}`,p.value,'font-mono')).join('') : '<p class="text-sm text-slate-400 sm:col-span-2">لا توجد أرقام دفع محفوظة داخل المحتوى.</p>'}
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-5 mt-7">
+                        <div class="rounded-2xl border border-slate-200 dark:border-slate-700 p-5">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="font-black">الكورسات (${teacherCourses.length})</h3>
+                            </div>
+                            <div class="space-y-2">
+                                ${teacherCourses.length ? teacherCourses.map(c => `<div class="flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-900/40 p-3"><img src="${escapeHtml(c.image || '')}" onerror="this.style.display='none'" class="w-12 h-12 rounded-lg object-cover"><div><p class="font-black text-sm">${escapeHtml(c.title || 'بدون عنوان')}</p><p class="text-xs text-slate-400">${Number(c.price || 0).toLocaleString('ar-EG')} ج.م</p></div></div>`).join('') : '<p class="text-sm text-slate-400">لا توجد كورسات.</p>'}
+                            </div>
+                        </div>
+                        <div class="rounded-2xl border border-slate-200 dark:border-slate-700 p-5">
+                            <h3 class="font-black mb-3">المحاضرات (${teacherLectures.length})</h3>
+                            <div class="space-y-2">
+                                ${teacherLectures.length ? teacherLectures.map(l => `<div class="rounded-xl bg-slate-50 dark:bg-slate-900/40 p-3"><p class="font-black text-sm">${escapeHtml(l.title || 'بدون عنوان')}</p><p class="text-xs text-slate-400">${Number(l.price || 0).toLocaleString('ar-EG')} ج.م</p></div>`).join('') : '<p class="text-sm text-slate-400">لا توجد محاضرات.</p>'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                content.innerHTML = `<div class="py-10 text-center text-rose-500 font-bold">تعذر تحميل تفاصيل المعلم: ${escapeHtml(error.message)}</div>`;
+            }
+        };
+
+        let allTeachersAdminCache = {};
+
+        window.openStudentAdminDetails = async function(studentId) {
+            const student = allStudentsCache.find(s => s.id === studentId);
+            if (!student) {
+                alert('تعذر العثور على بيانات الطالب.');
+                return;
+            }
+
+            const modal = document.getElementById('admin-details-modal');
+            const content = document.getElementById('admin-details-modal-content');
+            if (!modal || !content) return;
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            content.innerHTML = `<div class="py-12 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin text-2xl"></i><p class="mt-3">جاري تحميل كورسات الطالب...</p></div>`;
+
+            try {
+                const [coursesSnap, subsSnap] = await Promise.all([
+                    getDocs(collection(db, 'courses')),
+                    getDocs(collection(db, 'subscriptions'))
+                ]);
+                const courses = coursesSnap.docs.map(d => ({id:d.id, ...d.data()}));
+                const approvedSubs = subsSnap.docs
+                    .map(d => ({id:d.id, ...d.data()}))
+                    .filter(x => x.studentEmail === student.email && String(x.status || '').toLowerCase() === 'approved');
+
+                const subscribedIds = new Set(approvedSubs.map(x => x.courseId).filter(Boolean));
+                const name = adminDetailValue(student.name,'طالب بدون اسم');
+
+                content.innerHTML = `
+                    <div class="border-b border-slate-200 dark:border-slate-700 pb-5">
+                        <p class="text-xs font-black text-sky-600">ملف الطالب</p>
+                        <h2 class="text-2xl font-black text-slate-900 dark:text-white mt-1">${escapeHtml(name)}</h2>
+                        <div class="flex flex-wrap gap-2 mt-3">
+                            <span class="px-3 py-1.5 rounded-xl bg-sky-50 text-sky-700 text-xs font-bold">${escapeHtml(student.email || 'بدون بريد')}</span>
+                            <span class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-200 text-xs font-bold">${escapeHtml(student.stage || student.grade || 'الصف غير محدد')}</span>
+                            <span class="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 text-xs font-bold">${subscribedIds.size} كورس مفتوح</span>
+                        </div>
+                    </div>
+
+                    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-5">
+                        ${adminDetailRow('fa-solid fa-phone','رقم الهاتف',student.phone)}
+                        ${adminDetailRow('fa-solid fa-id-card','رقم القيد',student.qaidNumber)}
+                        ${adminDetailRow('fa-solid fa-school','الصف الدراسي',student.stage || student.grade)}
+                        ${adminDetailRow('fa-solid fa-wallet','رصيد المحفظة',student.walletBalance)}
+                    </div>
+
+                    <div class="mt-7 rounded-2xl border border-emerald-200 dark:border-emerald-500/30 p-5">
+                        <div class="flex items-center justify-between gap-3 mb-4">
+                            <div>
+                                <h3 class="text-lg font-black text-emerald-700 dark:text-emerald-300">الكورسات المشترك فيها</h3>
+                                <p class="text-xs text-slate-400 mt-1">يمكنك فتح أو إدارة الوصول من الزر التالي.</p>
+                            </div>
+                            <button type="button" onclick="window.openStudentCourseAccess('${student.id}')" class="bg-brand-primary text-white px-4 py-2.5 rounded-xl text-xs font-black">
+                                <i class="fa-solid fa-unlock-keyhole ml-1"></i> فتح ككورس
+                            </button>
+                        </div>
+                        <div class="space-y-2">
+                            ${courses.filter(c => subscribedIds.has(c.id)).length
+                                ? courses.filter(c => subscribedIds.has(c.id)).map(c => `<div class="flex items-center justify-between gap-3 rounded-xl bg-slate-50 dark:bg-slate-900/40 p-3"><div><p class="font-black text-sm">${escapeHtml(c.title || 'بدون عنوان')}</p><p class="text-xs text-slate-400">${escapeHtml(c.teacherName || c.teacherEmail || 'بدون معلم')}</p></div><span class="text-xs font-black text-emerald-600"><i class="fa-solid fa-circle-check"></i> مفتوح</span></div>`).join('')
+                                : '<p class="text-sm text-slate-400">لا يوجد كورسات مفتوحة لهذا الطالب.</p>'}
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                content.innerHTML = `<div class="py-10 text-center text-rose-500 font-bold">تعذر تحميل كورسات الطالب: ${escapeHtml(error.message)}</div>`;
+            }
+        };
+
+        window.openStudentCourseAccess = async function(studentId) {
+            const student = allStudentsCache.find(s => s.id === studentId);
+            if (!student) return;
+
+            const content = document.getElementById('admin-details-modal-content');
+            if (!content) return;
+
+            try {
+                const [coursesSnap, subsSnap] = await Promise.all([
+                    getDocs(collection(db, 'courses')),
+                    getDocs(collection(db, 'subscriptions'))
+                ]);
+                const courses = coursesSnap.docs.map(d => ({id:d.id, ...d.data()}));
+                const approvedSubs = subsSnap.docs
+                    .map(d => ({id:d.id, ...d.data()}))
+                    .filter(x => x.studentEmail === student.email && String(x.status || '').toLowerCase() === 'approved');
+
+                const checked = new Set(approvedSubs.map(x => x.courseId).filter(Boolean));
+
+                content.innerHTML = `
+                    <div class="flex items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-700 pb-5">
+                        <div>
+                            <p class="text-xs font-black text-brand-primary">إدارة الوصول</p>
+                            <h2 class="text-2xl font-black text-slate-900 dark:text-white">فتح كورسات لـ ${escapeHtml(student.name || student.email)}</h2>
+                            <p class="text-xs text-slate-400 mt-1">اعمل علامة على الكورسات التي تريد فتحها للطالب ثم اضغط حفظ.</p>
+                        </div>
+                        <button type="button" onclick="window.openStudentAdminDetails('${student.id}')" class="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-700 text-xs font-black">رجوع</button>
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-3 mt-5" id="student-course-access-list">
+                        ${courses.length ? courses.map(c => `
+                            <label class="cursor-pointer rounded-2xl border ${checked.has(c.id) ? 'border-emerald-400 bg-emerald-50/60 dark:bg-emerald-900/10' : 'border-slate-200 dark:border-slate-700'} p-4 flex items-start gap-3">
+                                <input type="checkbox" class="student-course-access-checkbox mt-1 w-5 h-5 accent-indigo-600" value="${escapeHtml(c.id)}" ${checked.has(c.id) ? 'checked' : ''}>
+                                <div class="min-w-0 flex-1">
+                                    <p class="font-black text-sm">${escapeHtml(c.title || 'بدون عنوان')}</p>
+                                    <p class="text-xs text-slate-400 mt-1">${escapeHtml(c.teacherName || c.teacherEmail || 'بدون معلم')}</p>
+                                    <p class="text-xs text-slate-500 mt-2">${Number(c.price || 0).toLocaleString('ar-EG')} ج.م · ${Array.isArray(c.lessons) ? c.lessons.length : 0} حصة</p>
+                                </div>
+                            </label>
+                        `).join('') : '<p class="text-sm text-slate-400">لا توجد كورسات في المنصة.</p>'}
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row gap-2 mt-6">
+                        <button type="button" onclick="window.saveStudentCourseAccess('${student.id}')" class="flex-1 bg-brand-primary hover:bg-indigo-700 text-white py-3 rounded-xl font-black">
+                            <i class="fa-solid fa-floppy-disk ml-1"></i> حفظ وفتح المحدد
+                        </button>
+                        <button type="button" onclick="window.openStudentAdminDetails('${student.id}')" class="sm:w-40 bg-slate-100 dark:bg-slate-700 py-3 rounded-xl font-black">إلغاء</button>
+                    </div>
+                `;
+            } catch (error) {
+                content.innerHTML = `<div class="py-10 text-center text-rose-500 font-bold">تعذر تحميل الكورسات: ${escapeHtml(error.message)}</div>`;
+            }
+        };
+
+        window.saveStudentCourseAccess = async function(studentId) {
+            const student = allStudentsCache.find(s => s.id === studentId);
+            if (!student) return;
+
+            const selectedIds = Array.from(document.querySelectorAll('.student-course-access-checkbox:checked')).map(el => el.value);
+            const coursesSnap = await getDocs(collection(db, 'courses'));
+            const courses = coursesSnap.docs.map(d => ({id:d.id, ...d.data()}));
+
+            try {
+                const subsSnap = await getDocs(collection(db, 'subscriptions'));
+                const existing = subsSnap.docs.map(d => ({id:d.id, ...d.data()}))
+                    .filter(x => x.studentEmail === student.email);
+
+                const existingByCourse = new Map(existing.filter(x => x.courseId).map(x => [x.courseId, x]));
+
+                for (const course of courses) {
+                    const shouldOpen = selectedIds.includes(course.id);
+                    const current = existingByCourse.get(course.id);
+
+                    if (shouldOpen && (!current || String(current.status || '').toLowerCase() !== 'approved')) {
+                        if (current) {
+                            await updateDoc(doc(db, 'subscriptions', current.id), {
+                                status: 'approved',
+                                approvedAt: new Date().toISOString(),
+                                paymentMethod: 'admin',
+                                amount: Number(current.amount || course.price || 0),
+                                teacherEmail: course.teacherEmail || '',
+                                teacherName: course.teacherName || '',
+                                courseId: course.id,
+                                courseTitle: course.title || ''
+                            });
+                        } else {
+                            await addDoc(collection(db, 'subscriptions'), {
+                                studentEmail: student.email,
+                                studentName: student.name || '',
+                                teacherEmail: course.teacherEmail || '',
+                                teacherName: course.teacherName || '',
+                                courseId: course.id,
+                                courseTitle: course.title || '',
+                                amount: Number(course.price || 0),
+                                paymentMethod: 'admin',
+                                status: 'approved',
+                                createdAt: new Date().toISOString(),
+                                approvedAt: new Date().toISOString()
+                            });
+                        }
+                    } else if (!shouldOpen && current && String(current.status || '').toLowerCase() === 'approved') {
+                        await updateDoc(doc(db, 'subscriptions', current.id), { status: 'revoked', revokedAt: new Date().toISOString(), revokedBy: 'admin' });
+                    }
+                }
+
+                alert('تم حفظ صلاحيات الطالب وفتح الكورسات المحددة بنجاح.');
+                await window.openStudentAdminDetails(student.id);
+            } catch (error) {
+                alert('حدث خطأ أثناء حفظ صلاحيات الكورسات: ' + error.message);
+            }
+        };
+
+        window.approveTeacherPlanRequest = async function(reqId, teacherEmail) {
+            try {
+                await updateDoc(doc(db, "teacher_plan_requests", reqId), { status: 'approved' });
+                const teacherQuery = query(collection(db, "teachers"), where("email", "==", teacherEmail));
+                const teacherSnap = await getDocs(teacherQuery);
+                if (teacherSnap.empty) {
+                    await addDoc(collection(db, "teachers"), {
+                        email: teacherEmail,
+                        status: 'approved'
+                    });
+                } else {
+                    teacherSnap.forEach(async teacherDoc => {
+                        await updateDoc(doc(db, "teachers", teacherDoc.id), { status: 'approved' });
+                    });
+                }
+                try {
+                    window.sendPlatformTelegramAlert(
+                        'تم قبول معلم جديد',
+                        `👨‍🏫 المعلم: ${teacherEmail}\n✅ تم تفعيل حسابه وفتح لوحة المعلم\n🕒 ${new Date().toLocaleString('ar-EG')}`
+                    );
+                } catch (telegramError) {
+                    console.warn('Telegram alert failed but approval succeeded:', telegramError);
+                }
+                await loadOwnerDashboard();
+            } catch (error) {
+                alert("حدث خطأ أثناء القبول: " + error.message);
+            }
+        };
+
+        window.rejectTeacherPlanRequest = async function(reqId, teacherEmail) {
+            if(confirm('هل أنت متأكد من رفض طلب هذا المعلم؟')) {
+                try {
+                    await updateDoc(doc(db, "teacher_plan_requests", reqId), { status: 'rejected' });
+                    const teacherQuery = query(collection(db, "teachers"), where("email", "==", teacherEmail));
+                    const teacherSnap = await getDocs(teacherQuery);
+                    teacherSnap.forEach(async teacherDoc => {
+                        await updateDoc(doc(db, "teachers", teacherDoc.id), { status: 'rejected' });
+                    });
+                    await loadOwnerDashboard();
+                } catch (error) {
+                    alert("حدث خطأ أثناء الرفض: " + error.message);
+                }
+            }
+        };
+
+        window.approveTeacher = async function(id) {
+            try {
+                await updateDoc(doc(db, "teachers", id), { status: 'approved' });
+                try {
+                    window.sendPlatformTelegramAlert(
+                        'تمت الموافقة على حساب مدرس',
+                        `✅ تم قبول حساب معلم جديد في المنصة\n🕒 ${new Date().toLocaleString('ar-EG')}`
+                    );
+                } catch (telegramError) {
+                    console.warn('Telegram alert failed but approval succeeded:', telegramError);
+                }
+                await loadOwnerDashboard();
+            } catch (error) {
+                alert("حدث خطأ أثناء القبول: " + error.message);
+            }
+        };
+
+        window.rejectTeacher = async function(id) {
+            if(confirm('هل أنت متأكد من رفض طلب هذا المعلم؟ سيتم حذف الطلب.')) {
+                try {
+                    await deleteDoc(doc(db, "teachers", id));
+                    await loadOwnerDashboard();
+                } catch (error) {
+                    alert("حدث خطأ أثناء الرفض: " + error.message);
+                }
+            }
+        };
+
+        window.deleteTeacher = async function(id) {
+            if(confirm('هل أنت متأكد من حذف حساب هذا المعلم النهائي؟')) {
+                try {
+                    await deleteDoc(doc(db, "teachers", id));
+                    await loadOwnerDashboard();
+                } catch (error) {
+                    alert("حدث خطأ أثناء الحذف: " + error.message);
+                }
+            }
+        };
+
+        window.deleteCourse = async function(id) {
+            if(confirm('هل أنت متأكد من حذف هذه الدورة؟')) {
+                try {
+                    await deleteDoc(doc(db, "courses", id));
+                    await loadOwnerDashboard();
+                } catch (error) {
+                    alert("حدث خطأ أثناء حذف الكورس: " + error.message);
+                }
+            }
+        };
+
+        window.toggleDarkMode = function() {
+            document.documentElement.classList.toggle('dark');
+        };
+
+        window.toggleSupportDrawer = function() {
+            const drawer = document.getElementById('support-drawer');
+            if (!drawer) return;
+
+            drawer.classList.toggle('hidden');
+            if (!drawer.classList.contains('hidden')) {
+                window.refreshSupportMessages?.();
+            }
+        };
+
+        window.resetPlatformData = async function() {
+            const code = Math.random().toString(36).substring(2, 7).toUpperCase();
+            const typedCode = window.prompt(`هذا الإجراء سيحذف البيانات من Firebase.\nاكتب الكود التالي للتأكيد: ${code}`, '');
+
+            if (!typedCode || typedCode.trim().toUpperCase() !== code) {
+                window.alert('الكود غير صحيح. لم يتم حذف أي شيء.');
+                return;
+            }
+
+            const confirmed = window.confirm('هل أنت متأكد؟ هذا الإجراء يحذف المدرسين والطلاب والكورسات والاشتراكات والرسائل وغيرها ولا يمكن التراجع عنه.');
+            if (!confirmed) return;
+
+            const collections = [
+                'teachers',
+                'students',
+                'courses',
+                'lectures',
+                'teacher_plan_requests',
+                'subscriptions',
+                'lectureSubscriptions',
+                'wallet_topups',
+                'wallet_purchase_requests',
+                'user_progress',
+                'exam_submissions',
+                'exam_attempts',
+                'owners',
+                'support_messages',
+                'lesson_live_chat',
+                'lesson_chat_sessions',
+                'live_waiting_room_scores',
+                'live_waiting_room_presence',
+                'payments',
+                'orders',
+                'messages',
+                'lessons',
+                'live_lessons'
+            ];
+
+            let deletedCount = 0;
+            const errors = [];
+            const button = document.getElementById('reset-platform-data-btn');
+            const originalButtonText = button?.textContent;
+            if (button) {
+                button.disabled = true;
+                button.textContent = 'جاري حذف البيانات...';
+            }
+
+            try {
+                for (const collectionName of collections) {
+                    try {
+                        const snapshot = await getDocs(collection(db, collectionName));
+                        for (let offset = 0; offset < snapshot.docs.length; offset += 100) {
+                            const batch = snapshot.docs.slice(offset, offset + 100);
+                            const results = await Promise.allSettled(batch.map(docSnap =>
+                                deleteDoc(doc(db, collectionName, docSnap.id))
+                            ));
+                            deletedCount += results.filter(result => result.status === 'fulfilled').length;
+                            const failedCount = results.filter(result => result.status === 'rejected').length;
+                            if (failedCount) errors.push(`${collectionName}: فشل حذف ${failedCount} مستندًا`);
+                        }
+                    } catch (error) {
+                        errors.push(`${collectionName}: ${error.message || 'تعذر قراءة المجموعة أو حذفها'}`);
+                    }
+                }
+
+                for (const collectionName of collections) {
+                    try {
+                        const remaining = await getDocs(collection(db, collectionName));
+                        if (!remaining.empty) errors.push(`${collectionName}: ما زال بها ${remaining.size} مستندًا`);
+                    } catch (error) {
+                        errors.push(`${collectionName}: تعذر التحقق من الإفراغ`);
+                    }
+                }
+
+                if (errors.length) console.error('Reset platform data errors:', errors);
+                const errorSummary = errors.length
+                    ? `\nلم يكتمل المسح في: ${errors.slice(0, 8).join('؛ ')}${errors.length > 8 ? `، ومجموعات أخرى (${errors.length - 8})` : ''}.`
+                    : '\nتم التحقق من أن كل المجموعات المعروفة للتطبيق فارغة.';
+                window.alert(`تم حذف ${deletedCount} مستندًا من ${collections.length} مجموعة.${errorSummary}`);
+            } finally {
+                if (button) {
+                    button.disabled = false;
+                    button.textContent = originalButtonText;
+                }
+            }
+        };
+
+        window.refreshSupportMessages = async function() {
+            const list = document.getElementById('support-messages-list');
+            if (!list) return;
+
+            list.innerHTML = '<div class="p-5 text-center text-slate-400">جاري تحميل الرسائل...</div>';
+
+            try {
+                const snapshot = await getDocs(query(collection(db, 'support_messages'), orderBy('createdAt', 'desc')));
+                const remoteMessages = snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
+                const cachedMessages = JSON.parse(localStorage.getItem('masar_support_messages_cache') || '[]');
+                const merged = [...remoteMessages];
+
+                cachedMessages.forEach((cachedMessage) => {
+                    const alreadyExists = merged.some((item) => item.id === cachedMessage.id || (item.message && cachedMessage.message && item.message === cachedMessage.message && item.createdAt === cachedMessage.createdAt));
+                    if (!alreadyExists) {
+                        merged.push(cachedMessage);
+                    }
+                });
+
+                merged.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+                localStorage.setItem('masar_support_messages_cache', JSON.stringify(merged.slice(0, 100)));
+                renderSupportMessages(merged);
+            } catch (error) {
+                console.error('Support messages refresh failed:', error);
+                const cachedMessages = JSON.parse(localStorage.getItem('masar_support_messages_cache') || '[]');
+                if (cachedMessages.length) {
+                    renderSupportMessages(cachedMessages);
+                } else {
+                    list.innerHTML = '<div class="p-5 text-center text-slate-400">لا توجد رسائل دعم فني حتى الآن.</div>';
+                }
+            }
+        };
+
+        window.previewReceipt = function(url) {
+            const modal = document.getElementById('receipt-view-modal');
+            const img = document.getElementById('receipt-view-img');
+            const zoomBtn = document.getElementById('receipt-view-zoom-btn');
+            img.src = url;
+            img.classList.remove('zoomed');
+            zoomBtn.innerText = 'تكبير';
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        };
+
+        window.toggleReceiptZoom = function() {
+            const img = document.getElementById('receipt-view-img');
+            const zoomBtn = document.getElementById('receipt-view-zoom-btn');
+            img.classList.toggle('zoomed');
+            zoomBtn.innerText = img.classList.contains('zoomed') ? 'تصغير' : 'تكبير';
+        };
+
+        window.closeReceiptModal = function() {
+            const modal = document.getElementById('receipt-view-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        };
+
+        function getCouponCatalog() {
+            try {
+                return JSON.parse(localStorage.getItem('masar_coupon_catalog') || '[]');
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function setCouponCatalog(coupons) {
+            localStorage.setItem('masar_coupon_catalog', JSON.stringify(coupons));
+        }
+
+        function getCouponUsageLog() {
+            try {
+                return JSON.parse(localStorage.getItem('masar_coupon_usage_log') || '[]');
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function renderCouponAdmin() {
+            const coupons = getCouponCatalog();
+            const list = document.getElementById('coupon-list');
+            const usage = document.getElementById('coupon-usage-log');
+
+            if (!list || !usage) return;
+
+            if (coupons.length === 0) {
+                list.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-slate-400">لا توجد أكواد خصم مضافة بعد.</td></tr>';
+            } else {
+                list.innerHTML = coupons.map(item => `
+                    <tr class="border-b border-slate-100 dark:border-slate-700">
+                        <td class="p-3 font-bold text-violet-600">${item.code}</td>
+                        <td class="p-3 font-bold text-emerald-600">${item.percentage}%</td>
+                        <td class="p-3 text-center">
+                            <button onclick="window.deleteCoupon('${item.code.replace(/'/g, "\\'")}' )" class="bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition">حذف</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            const logs = getCouponUsageLog();
+            if (logs.length === 0) {
+                usage.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-400">لا توجد عمليات استخدام حتى الآن.</td></tr>';
+            } else {
+                usage.innerHTML = logs.map(item => `
+                    <tr class="border-b border-slate-100 dark:border-slate-700">
+                        <td class="p-3 font-bold text-violet-600">${item.code}</td>
+                        <td class="p-3 font-bold text-emerald-600">${item.percentage}%</td>
+                        <td class="p-3">${item.userEmail || 'غير معروف'}</td>
+                        <td class="p-3">${item.courseTitle || 'غير محدد'}</td>
+                        <td class="p-3">${new Date(item.createdAt).toLocaleString('ar-EG')}</td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        window.clearCouponUsageLog = function() {
+            const confirmed = window.confirm('هل أنت متأكد من مسح سجل استخدام أكواد الخصم؟');
+            if (!confirmed) return;
+            localStorage.removeItem('masar_coupon_usage_log');
+            renderCouponAdmin();
+        };
+
+        window.deleteCoupon = function(code) {
+            if (!code) return;
+            const coupons = getCouponCatalog().filter(item => item.code !== code);
+            setCouponCatalog(coupons);
+            renderCouponAdmin();
+        };
+
+        document.getElementById('coupon-form')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const codeInput = document.getElementById('coupon-code');
+            const percentInput = document.getElementById('coupon-percent');
+            if (!codeInput || !percentInput) return;
+
+            const code = String(codeInput.value).trim();
+            const percentage = Number(percentInput.value);
+            if (!code) {
+                alert('يرجى إدخال كود الخصم');
+                return;
+            }
+            if (!Number.isFinite(percentage) || percentage < 1 || percentage > 100) {
+                alert('يرجى إدخال نسبة خصم بين 1 و 100');
+                return;
+            }
+
+            const coupons = getCouponCatalog();
+            const exists = coupons.some(item => item.code.toUpperCase() === code.toUpperCase());
+            if (exists) {
+                alert('هذا الكود موجود فعلاً، اختر كوداً مختلفاً.');
+                return;
+            }
+
+            coupons.push({ code: code.toUpperCase(), percentage });
+            setCouponCatalog(coupons);
+            codeInput.value = '';
+            percentInput.value = '10';
+            renderCouponAdmin();
+        });
+
+        // ===== التحكم في أسعار باقات المدرسين =====
+        const DEFAULT_TEACHER_PRICING = { plan1: { monthly: 300, yearly: 1500 }, plan2: { monthly: 500, yearly: 2100 } };
+        const pricingDocRef = () => doc(db, 'platform_settings', 'teacher_pricing');
+        const priceInputIds = { plan1: { monthly: 'price-plan1-monthly', yearly: 'price-plan1-yearly' }, plan2: { monthly: 'price-plan2-monthly', yearly: 'price-plan2-yearly' } };
+
+        function fillPricingInputs(pricing) {
+            ['plan1', 'plan2'].forEach(plan => ['monthly', 'yearly'].forEach(cycle => {
+                const input = document.getElementById(priceInputIds[plan][cycle]);
+                if (input) input.value = pricing[plan][cycle];
+            }));
+        }
+
+        function setPricingStatus(message, isError = false) {
+            const el = document.getElementById('pricing-save-status');
+            if (!el) return;
+            el.textContent = message;
+            el.className = `text-xs font-bold ${isError ? 'text-rose-500' : 'text-emerald-600'}`;
+        }
+
+        async function loadPricingAdmin() {
+            const pricing = JSON.parse(JSON.stringify(DEFAULT_TEACHER_PRICING));
+            try {
+                const snap = await getDoc(pricingDocRef());
+                if (snap.exists()) {
+                    const data = snap.data() || {};
+                    ['plan1', 'plan2'].forEach(plan => ['monthly', 'yearly'].forEach(cycle => {
+                        const value = Number(data[plan] && data[plan][cycle]);
+                        if (Number.isFinite(value) && value >= 0) pricing[plan][cycle] = value;
+                    }));
+                }
+            } catch (error) {
+                console.error('Load pricing failed:', error);
+                setPricingStatus('تعذر تحميل الأسعار المحفوظة، معروضة الأسعار الأصلية.', true);
+            }
+            fillPricingInputs(pricing);
+        }
+
+        async function savePricing(pricing) {
+            await setDoc(pricingDocRef(), { ...pricing, updatedAt: new Date().toISOString() });
+        }
+
+        window.saveTeacherPricing = async function() {
+            const pricing = { plan1: {}, plan2: {} };
+            for (const plan of ['plan1', 'plan2']) {
+                for (const cycle of ['monthly', 'yearly']) {
+                    const raw = document.getElementById(priceInputIds[plan][cycle]).value;
+                    const value = Number(raw);
+                    if (raw === '' || !Number.isFinite(value) || value < 0) {
+                        setPricingStatus('من فضلك أدخل أسعار صحيحة (أرقام من 0 فأكتر) في كل الخانات.', true);
+                        return;
+                    }
+                    pricing[plan][cycle] = Math.round(value);
+                }
+            }
+            try {
+                setPricingStatus('جاري الحفظ...');
+                await savePricing(pricing);
+                setPricingStatus('تم حفظ الأسعار بنجاح ✓ وهتظهر للمدرسين فوراً.');
+            } catch (error) {
+                console.error('Save pricing failed:', error);
+                setPricingStatus('تعذر حفظ الأسعار، تأكد من صلاحيات Firestore وحاول تاني.', true);
+            }
+        };
+
+        window.resetTeacherPricing = async function() {
+            if (!window.confirm('هترجع كل الأسعار للقيم الأصلية (300 / 1500 / 500 / 2100) وتتحفظ فوراً. متأكد؟')) return;
+            fillPricingInputs(DEFAULT_TEACHER_PRICING);
+            try {
+                await savePricing(DEFAULT_TEACHER_PRICING);
+                setPricingStatus('تم الرجوع للأسعار الأصلية وحفظها ✓');
+            } catch (error) {
+                console.error('Reset pricing failed:', error);
+                setPricingStatus('تعذر حفظ الأسعار الأصلية، حاول تاني.', true);
+            }
+        };
+
+        // ===== خصومات المدرسين عند التجديد =====
+        let teacherDiscountsLoaded = false;
+        let teacherDiscountRows = [];
+
+        function teacherPlanText(plan) {
+            const labels = { Plan1: 'الأساسية', Plan2: 'الاحترافية', FreeTrial: 'تجربة مجانية', TestPlan: 'تجريبية' };
+            return labels[plan] || plan || 'غير محددة';
+        }
+
+        function renderTeacherDiscounts() {
+            const list = document.getElementById('teacher-discounts-list');
+            const term = String(document.getElementById('teacher-discounts-search')?.value || '').trim().toLowerCase();
+            const rows = teacherDiscountRows.filter(t => !term || `${t.name} ${t.email}`.toLowerCase().includes(term));
+            if (!rows.length) {
+                list.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-400">لا يوجد مدرسون مطابقون.</td></tr>';
+                return;
+            }
+            list.innerHTML = rows.map(t => {
+                const enabled = Boolean(t.enabled);
+                return `<tr class="border-b border-slate-100 dark:border-slate-700">
+                    <td class="p-3"><p class="font-bold">${escapeHtml(t.name)}</p><p class="text-[11px] text-slate-400">${escapeHtml(t.email)}</p></td>
+                    <td class="p-3"><span class="bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 px-2.5 py-1 rounded-md text-xs font-bold">${escapeHtml(teacherPlanText(t.plan))}</span></td>
+                    <td class="p-3">
+                        <select id="td-mode-${t.id}" onchange="window.onTeacherDiscountModeChange('${t.id}')" class="px-3 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-xs font-bold">
+                            <option value="default" ${enabled ? '' : 'selected'}>الأسعار العادية (افتراضي)</option>
+                            <option value="discount" ${enabled ? 'selected' : ''}>خصم تلقائي عند التجديد</option>
+                        </select>
+                    </td>
+                    <td class="p-3"><input id="td-percent-${t.id}" type="number" min="1" max="100" value="${enabled ? t.percent : 10}" ${enabled ? '' : 'disabled'} class="w-24 px-3 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-xs disabled:opacity-40"></td>
+                    <td class="p-3 text-center"><button type="button" onclick="window.saveTeacherDiscount('${t.id}')" class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition"><i class="fa-solid fa-floppy-disk ml-1"></i>حفظ</button></td>
+                </tr>`;
+            }).join('');
+        }
+
+        async function loadTeacherDiscounts() {
+            const list = document.getElementById('teacher-discounts-list');
+            list.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin ml-2"></i>جاري تحميل المدرسين...</td></tr>';
+            try {
+                const snap = await getDocs(collection(db, 'teachers'));
+                teacherDiscountRows = [];
+                snap.forEach(d => {
+                    const data = d.data();
+                    if (String(data.status || 'approved').toLowerCase() !== 'approved') return;
+                    teacherDiscountRows.push({
+                        id: d.id,
+                        name: getValue(data, ['name', 'fullname', 'teacherName', 'userName', 'username']) || 'غير محدد',
+                        email: getValue(data, ['email', 'mail', 'userEmail']) || 'غير محدد',
+                        plan: getValue(data, ['currentPlan', 'plan', 'selectedPlan']) || '',
+                        enabled: Boolean(data.renewalDiscountEnabled) && Number(data.renewalDiscountPercent) > 0,
+                        percent: Number(data.renewalDiscountPercent) > 0 ? Number(data.renewalDiscountPercent) : 10
+                    });
+                });
+                teacherDiscountsLoaded = true;
+                renderTeacherDiscounts();
+            } catch (error) {
+                console.error('Load teacher discounts failed:', error);
+                list.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-rose-400">حدث خطأ أثناء تحميل المدرسين</td></tr>';
+            }
+        }
+
+        window.toggleTeacherDiscountsPanel = async function() {
+            const panel = document.getElementById('teacher-discounts-panel');
+            const chevron = document.getElementById('teacher-discounts-chevron');
+            const wasHidden = panel.classList.contains('hidden');
+            panel.classList.toggle('hidden');
+            chevron.style.transform = wasHidden ? 'rotate(180deg)' : '';
+            if (wasHidden && !teacherDiscountsLoaded) await loadTeacherDiscounts();
+        };
+
+        window.filterTeacherDiscounts = function() { if (teacherDiscountsLoaded) renderTeacherDiscounts(); };
+
+        window.onTeacherDiscountModeChange = function(id) {
+            const mode = document.getElementById(`td-mode-${id}`).value;
+            document.getElementById(`td-percent-${id}`).disabled = mode !== 'discount';
+        };
+
+        window.saveTeacherDiscount = async function(id) {
+            const mode = document.getElementById(`td-mode-${id}`).value;
+            const percentInput = document.getElementById(`td-percent-${id}`);
+            const enabled = mode === 'discount';
+            const percent = Number(percentInput.value);
+            if (enabled && (!Number.isFinite(percent) || percent < 1 || percent > 100)) {
+                alert('يرجى إدخال نسبة خصم بين 1 و 100');
+                return;
+            }
+            try {
+                await updateDoc(doc(db, 'teachers', id), { renewalDiscountEnabled: enabled, renewalDiscountPercent: enabled ? Math.round(percent) : 0 });
+                const row = teacherDiscountRows.find(t => t.id === id);
+                if (row) { row.enabled = enabled; row.percent = enabled ? Math.round(percent) : row.percent; }
+                alert(enabled ? `تم تفعيل خصم ${Math.round(percent)}% تلقائي عند كل تجديد لهذا المدرس.` : 'تم إرجاع المدرس للأسعار العادية.');
+            } catch (error) {
+                console.error('Save teacher discount failed:', error);
+                alert('تعذر حفظ الخصم، حاول مرة أخرى.');
+            }
+        };
+
+        // Initial Load
+        loadOwnerDashboard();
+        renderCouponAdmin();
+        loadPricingAdmin();
+        subscribeSupportMessages();
+    </script>
+</body>
+</html>
